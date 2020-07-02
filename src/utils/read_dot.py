@@ -9,29 +9,29 @@ def load_graph(path: str):
 if __name__ == "__main__":
     graph_path = 'graphs/correlator.dot'
     G = load_graph(path=graph_path)
-    # G = nx.DiGraph()
-    # G.add_weighted_edges_from([('vh', 'v1', 1),
-    #                            ('v1', 'v2', 1),
-    #                            ('v2', 'v3', 1),
-    #                            ('v3', 'v4', 1),
-    #                            ('v1', 'v7', 0),
-    #                            ('v2', 'v6', 0),
-    #                            ('v3', 'v5', 0),
-    #                            ('v4', 'v5', 0),
-    #                            ('v5', 'v6', 0),
-    #                            ('v6', 'v7', 0),
-    #                            ('v7', 'vh', 0),
-    #                            ])
-    # nx.set_node_attributes(G, values={'vh': 0,
-    #                            'v1':3,
-    #                            'v2':3,
-    #                            'v3':3,
-    #                            'v4':3,
-    #                            'v5':7,
-    #                            'v6':7,
-    #                            'v7':7}, name="delay")
-    # G.name = "correlator"
-    # nx.nx_agraph.write_dot(G, path)
+    G = nx.DiGraph()
+    nx.set_edge_attributes(G, [('h', '1', 1),
+                               ('1', '2', 1),
+                               ('2', '3', 1),
+                               ('3', '4', 1),
+                               ('1', '7', 0),
+                               ('2', '6', 0),
+                               ('3', '5', 0),
+                               ('4', '5', 0),
+                               ('5', '6', 0),
+                               ('6', '7', 0),
+                               ('7', 'h', 0),
+                               ], name='wire_delay')
+    nx.set_node_attributes(G, values={'h': 0,
+                               '1':3,
+                               '2':3,
+                               '3':3,
+                               '4':3,
+                               '5':7,
+                               '6':7,
+                               '7':7}, name="component_delay")
+    G.name = "correlator"
+    nx.nx_agraph.write_dot(G, graph_path)
     plt.subplot(121)
 
     nx.draw(G, with_labels=True, font_weight='bold')
