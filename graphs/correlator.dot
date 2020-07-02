@@ -1,0 +1,23 @@
+strict digraph correlator {
+	graph [name=correlator];
+	vh	 [component_delay=0];
+	v1	 [component_delay=3];
+	v2	 [component_delay=3];
+	v3	 [component_delay=3];
+	v4	 [component_delay=3];
+	v5	 [component_delay=7];
+	v6	 [component_delay=7];
+	v7	 [component_delay=7];
+
+	vh -> v1	 [wire_delay=1];
+	v1 -> v2	 [wire_delay=1];
+	v1 -> v7	 [wire_delay=0];
+	v2 -> v3	 [wire_delay=1];
+	v2 -> v6	 [wire_delay=0];
+	v3 -> v4	 [wire_delay=1];
+	v3 -> v5	 [wire_delay=0];
+	v4 -> v5	 [wire_delay=0];
+	v7 -> vh	 [wire_delay=0];
+	v6 -> v7	 [wire_delay=0];
+	v5 -> v6	 [wire_delay=0];
+}
