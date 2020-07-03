@@ -24,7 +24,7 @@ class WD:
         """
         self._weight_edges()
         self._all_pairs_shortest_path()
-        return self.compute_wd()
+        return self._compute_wd()
 
     def _weight_edges(self):
         """
@@ -74,7 +74,7 @@ class WD:
                                                          weight=lambda v1, v2, attributes: self._custom_weight(
                                                              attributes)))
 
-    def compute_wd(self):
+    def _compute_wd(self):
 
         for (src, targets) in self.all_pairs.items():
             for (target, path) in targets.items():
@@ -86,14 +86,14 @@ class WD:
 
                 # add also the source node to compute the total w and d
                 path.insert(0, src)
-                self.w[src][target] = self.compute_w(path)
-                self.d[src][target] = self.compute_d(path)
+                self.w[src][target] = self._compute_w(path)
+                self.d[src][target] = self._compute_d(path)
 
         print(str(self.d))
         for (src, targets) in self.d.items():
             print(str(sorted(targets.items())))
 
-    def compute_w(self, path: list):
+    def _compute_w(self, path: list):
         """
         :param path: path from the source to the target node
         :return: the sum all the wire delays along a path
@@ -101,7 +101,7 @@ class WD:
         return sum([self._weighted_graph[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
                     if v2 in self._weighted_graph[v1]])
 
-    def compute_d(self, path: list):
+    def _compute_d(self, path: list):
         """
         :param path: path from the source to the target node
         :return: the sum all the gate delays along a path plus the target one's
