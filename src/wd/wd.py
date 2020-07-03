@@ -1,5 +1,3 @@
-import itertools
-
 import networkx as nx
 
 from src.utils import read_dot as rd
@@ -15,7 +13,9 @@ class WD:
         self._weighted_graph = nx.DiGraph()
         self.w = {}
         self.d = {}
-
+        self.component_delay = 'component_delay'
+        self.wire_delay = 'wire_delay'
+        self.weight = 'weight'
 
     def wd(self):
         """
@@ -33,22 +33,27 @@ class WD:
         - d: Logic component delay
         """
 
-        component_delay = nx.get_node_attributes(G=self._graph, name='component_delay')
+        component_delay = nx.get_node_attributes(G=self._graph, name=self.component_delay)
 
         # Used in _custom_weight function(). Get the highest gate delay
         self._max_component_delay = max([int(d) for (node, d) in component_delay.items()])
 
+        node_attributes = {node: int(d) for (node, d) in component_delay.items()}
+
         # Change the component delay sign (-d)
-        component_delay = {node: -1 * int(d) for (node, d) in component_delay.items()}
+        component_delay = {node: -1 * d for (node, d) in node_attributes.items()}
+
+        # Add nodes and import attributes for d computation
         self._weighted_graph.add_nodes_from(self._graph.nodes())
+        nx.set_node_attributes(G=self._weighted_graph, values=node_attributes, name=self.component_delay)
 
         # Get wire delay (w)
-        wire_delay = nx.get_edge_attributes(G=self._graph, name='wire_delay')
+        wire_delay = nx.get_edge_attributes(G=self._graph, name=self.wire_delay)
 
         # Create the weight (w,-d)
         weights = {(v1, v2): (int(wire_delay), component_delay[v1]) for ((v1, v2), wire_delay) in wire_delay.items()}
         self._weighted_graph.add_edges_from(weights)
-        nx.set_edge_attributes(G=self._weighted_graph, values=weights, name='weight')
+        nx.set_edge_attributes(G=self._weighted_graph, values=weights, name=self.weight)
 
     def _custom_weight(self, attributes):
         """
@@ -58,8 +63,8 @@ class WD:
         :return:
         """
 
-        return attributes['weight'][0] * self._max_component_delay + (
-                self._max_component_delay - attributes['weight'][1])
+        return attributes[self.weight][0] * self._max_component_delay + \
+               (self._max_component_delay - attributes[self.weight][1])
 
     def _all_pairs_shortest_path(self):
         """
@@ -73,25 +78,38 @@ class WD:
 
         for (src, targets) in self.all_pairs.items():
             for (target, path) in targets.items():
+                # create the dictionary if not already present
                 if src not in self.w:
                     self.w[src] = {}
-                # add also the source node to compute the total w
+                if src not in self.d:
+                    self.d[src] = {}
+
+                # add also the source node to compute the total w and d
                 path.insert(0, src)
                 self.w[src][target] = self.compute_w(path)
+                self.d[src][target] = self.compute_d(path)
 
-        for (src, targets) in self.w.items():
-            print(str(targets))
+        print(str(self.d))
+        for (src, targets) in self.d.items():
+            print(str(sorted(targets.items())))
 
-
-    def compute_w(self, path):
+    def compute_w(self, path: list):
         """
-        sum all the wire delays along a path
-        :param path:
-        :return:
+        :param path: path from the source to the target node
+        :return: the sum all the wire delays along a path
         """
-        return sum([self._weighted_graph[v1][v2]['weight'][0] for v1, v2 in zip(path, path[1:]) if v2 in self._weighted_graph[v1]])
+        return sum([self._weighted_graph[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
+                    if v2 in self._weighted_graph[v1]])
 
-
+    def compute_d(self, path: list):
+        """
+        :param path: path from the source to the target node
+        :return: the sum all the gate delays along a path plus the target one's
+        """
+        target = path[-1]
+        return self._weighted_graph.nodes[target][self.component_delay] - sum(
+            [self._weighted_graph[v1][v2][self.weight][1] for v1, v2 in zip(path, path[1:])
+             if v2 in self._weighted_graph[v1]])
 
 
 if __name__ == '__main__':
