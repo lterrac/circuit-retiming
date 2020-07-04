@@ -1,7 +1,5 @@
 import networkx as nx
 
-from src.utils import read_dot as rd
-
 
 class WD:
     """
@@ -110,11 +108,3 @@ class WD:
         return self._weighted_graph.nodes[target][self.component_delay] - sum(
             [self._weighted_graph[v1][v2][self.weight][1] for v1, v2 in zip(path, path[1:])
              if v2 in self._weighted_graph[v1]])
-
-
-if __name__ == '__main__':
-    G = rd.load_graph('graphs/correlator.dot')
-
-    wd = WD(graph=G)
-
-    wd.wd()
