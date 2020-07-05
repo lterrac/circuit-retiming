@@ -91,6 +91,10 @@ class WD:
         for (src, targets) in self.d.items():
             print(str(sorted(targets.items())))
 
+        print(str(self.w))
+        for (src, targets) in self.w.items():
+            print(str(sorted(targets.items())))
+
     def _compute_w(self, path: list):
         """
         :param path: path from the source to the target node

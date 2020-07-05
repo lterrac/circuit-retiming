@@ -7,8 +7,8 @@ def load_graph(path: str):
 
 
 if __name__ == "__main__":
-    graph_path = 'graphs/correlator.dot'
-    G = load_graph(path=graph_path)
+    graph_path = 'graphs/correlator1.dot'
+    #G = load_graph(path=graph_path)
     G = nx.DiGraph()
     nx.set_edge_attributes(G, [('h', '1', 1),
                                ('1', '2', 1),
@@ -37,6 +37,11 @@ if __name__ == "__main__":
     nx.draw(G, with_labels=True, font_weight='bold')
     plt.subplot(122)
 
+    plt.subplot(121)
+
+    nx.draw(G, with_labels=True, font_weight='bold')
+    nx.draw_networkx_edge_labels(G, pos=nx.fruchterman_reingold_layout(G))
+    plt.show()
     nx.draw(G)
     # nx.draw_shell(G, nlist=[range(5, 10), range(5)], with_labels=True, font_weight='bold')
     plt.show()
