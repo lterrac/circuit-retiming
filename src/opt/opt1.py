@@ -19,7 +19,7 @@ class OPT1:
 
     def opt(self):
         self._d_range = self._create_d_range()
-        self._search_min_clock()
+        self.search_min_clock()
         self._apply_retiming()
 
         print("minimum clock cycle: {}".format(self.min_clock))
@@ -30,48 +30,64 @@ class OPT1:
         :return:
         """
 
-        # extract d from a dictionary of dictionaries in a list
+        # extract all possible d values from a dictionary of dictionaries and put them in a list
         return sorted(list(set([
             delay for target in [
                 targets.values() for targets in self.d.values()
             ] for delay in target
         ])))
 
-    def _search_min_clock(self):
+    def search_min_clock(self):
         """
         Use binary search
         :return:
         """
-        # keeps track of the clock already checked
-        clocks_explored = [(clock_candidate, None) for clock_candidate in self._d_range]
+        # keeps track of the clock already checked with the corresponding retimings
+        clocks_explored = [(clock_candidate, None, None) for clock_candidate in self._d_range]
 
-        feasible = self.binary_search_recursive(clocks_explored, 0, len(clocks_explored))
+        print("start search")
+        feasible, self.min_clock, self.retimings = self._binary_search_recursive(clocks_explored, 0, len(clocks_explored))
 
-        feasible, self.retimings = self._check_clock_feasibility(13)
+        print("f {} c {} r {}".format(feasible, self.min_clock, self.retimings))
         return
 
-    def binary_search_recursive(self, array, start, end):
+    def _binary_search_recursive(self, clocks, start, end):
+        """
+
+        :param clocks:
+        :param start:
+        :param end:
+        :return: if a clock feasible exists, the clock period, the retimings to apply
+        """
+        # TODO check if necessary, test it
         if start > end:
-            return False
+            return False, None, None
 
         mid = (start + end) // 2
-        feasible, retimings = self._check_clock_feasibility(array[mid][0])
-        array[mid] = (array[mid][1], feasible)
+        feasible, retimings = self._check_clock_feasibility(clocks[mid][0])
 
-        if array[mid - 1][1] is None:
-            predecessor_feasible, _ = self._check_clock_feasibility(array[mid - 1][0])
-            array[mid] = (array[mid][1], predecessor_feasible)
-            # TODO implement retimings cache
+        # update with values just discovered
+        clocks[mid] = (clocks[mid][0], feasible, retimings)
+
+        # exit positively if the possible retiming is the minimum one
+        if mid is 0 and feasible is True:
+            return feasible, clocks[mid], retimings
+
+        if mid is len(clocks) - 1 and feasible is False:
+            return feasible, None, None
+
+        # if the predecessor is not explored do it
+        if feasible is True and clocks[mid - 1][1] is None:
+            predecessor_feasible, predecessor_retimings = self._check_clock_feasibility(clocks[mid - 1][0])
+            clocks[mid - 1] = (clocks[mid - 1][0], predecessor_feasible, predecessor_retimings)
 
         if feasible is True:
-            if array[mid - 1][1] is False:
-                self.min_clock = array[mid][0]
-                self.retimings = retimings
-                return True
+            if clocks[mid - 1][1] is False:
+                return feasible, clocks[mid][0], retimings
             else:
-                return self.binary_search_recursive(array, start, mid - 1)
+                return self._binary_search_recursive(clocks, start, mid - 1)
         else:
-            return self.binary_search_recursive(array, mid + 1, end)
+            return self._binary_search_recursive(clocks, mid + 1, end)
 
     def _check_clock_feasibility(self, clock: int):
         """
@@ -109,6 +125,7 @@ class OPT1:
         nx.set_node_attributes(G=self.retimed_graph,
                                values={node: self.retimings[node] for node in self.retimed_graph.nodes}, name='lag')
         nx.set_edge_attributes(G=self.retimed_graph,
-                               values={(v1, v2): (self.w[v1][v2] + self.retimings[v2] - self.retimings[v1]) for (v1, v2) in
+                               values={(v1, v2): (self.w[v1][v2] + self.retimings[v2] - self.retimings[v1]) for (v1, v2)
+                                       in
                                        self.retimed_graph.edges}, name='registers')
         print(str(nx.get_edge_attributes(self.retimed_graph, 'registers')))
