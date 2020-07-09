@@ -1,6 +1,6 @@
 import networkx as nx
 
-from src.opt import opt1
+from src.opt import opt
 from src.wd import wd
 from src.utils import read_dot as rd
 
@@ -13,16 +13,16 @@ class Retimer:
     def __init__(self, unopt_graph: nx.DiGraph):
         self.graph = unopt_graph
         self.wd = wd.WD(graph=unopt_graph)
-        self.opt1 = None
+        self.opt = None
 
     def retime(self):
         self.wd.wd()
-        self.opt1 = opt1.OPT1(self.graph, self.wd.w, self.wd.d)
-        self.opt1.opt()
+        self.opt = opt.OPT(self.graph, self.wd.w, self.wd.d)
+        self.opt.opt("opt1")
 
 
 if __name__ == '__main__':
-    G = rd.load_graph('graphs/correlator.dot')
+    G = rd.load_graph('graphs/mini-correlator.dot')
 
     retimer = Retimer(unopt_graph=G)
 
