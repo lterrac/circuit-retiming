@@ -87,10 +87,11 @@ class WD:
                 self.w[src][target] = self._compute_w(path)
                 self.d[src][target] = self._compute_d(path)
 
-        print(str(self.d))
+        print("D Matrix")
         for (src, targets) in self.d.items():
             print(str(sorted(targets.items())))
-
+        print("---------------------------------------------")
+        print("W Matrix")
         print(str(self.w))
         for (src, targets) in self.w.items():
             print(str(sorted(targets.items())))

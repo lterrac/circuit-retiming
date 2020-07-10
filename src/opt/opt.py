@@ -77,9 +77,6 @@ class OPT:
         :param end:
         :return: if a clock feasible exists returns the retimings to apply otherwise None
         """
-        # TODO check if necessary, test it
-        if start > end:
-            return False, None
 
         mid = (start + end) // 2
 

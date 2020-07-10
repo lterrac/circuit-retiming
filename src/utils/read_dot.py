@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def load_graph(path: str):
+def load_graph(path: str) -> nx.DiGraph:
     return nx.nx_agraph.read_dot(path)
 
 
