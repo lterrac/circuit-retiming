@@ -115,7 +115,7 @@ class OPT:
         feasibility_graph.add_nodes_from(self.graph.nodes)
 
         # add first type of constraint from the original graph -> r(u) - r(v) <= w(e), so create arc v -> u
-        feasibility_graph.add_weighted_edges_from([(target, source, int(weight['wire_delay']))
+        feasibility_graph.add_weighted_edges_from([(target, source, weight['wire_delay'])
                                                    for (source, target, weight) in self.graph.edges.data()])
         # add second type of constraint from the original graph: r(u) - r(v) <= W(u,v) - 1 if D(u,v) > c
         feasibility_graph.add_weighted_edges_from([(target, source, self.w[source][target] - 1)
@@ -145,7 +145,7 @@ class OPT:
         """
         feasibility_graph = nx.DiGraph()
         feasibility_graph.add_nodes_from(self.graph.nodes)
-        feasibility_graph.add_weighted_edges_from([(source, target, int(weight['wire_delay']))
+        feasibility_graph.add_weighted_edges_from([(source, target, weight['wire_delay'])
                                                    for (source, target, weight) in self.graph.edges.data()],
                                                   weight="wire_delay")
 
@@ -193,7 +193,7 @@ class OPT:
         # Pick only the edges with w(e) = 0
         no_registers_graph.add_weighted_edges_from([(source, target, 0)
                                                     for (source, target, weight) in graph.edges.data()
-                                                    if int(weight['wire_delay']) is 0])
+                                                    if weight['wire_delay'] is 0])
 
         sorted_nodes = nx.topological_sort(no_registers_graph)
 
@@ -221,10 +221,9 @@ class OPT:
         :param retimings:
         :return: the retimed graph
         """
-        nx.set_node_attributes(G=graph,
-                               values={node: 0 for node in graph.nodes}, name='lag')
+        nx.set_node_attributes(G=graph, values=0, name='lag')
         nx.set_edge_attributes(G=graph,
-                               values={(v1, v2): (int(graph[v1][v2]['wire_delay']) + retimings[v2] - retimings[v1]) for
+                               values={(v1, v2): (graph[v1][v2]['wire_delay'] + retimings[v2] - retimings[v1]) for
                                        (v1, v2)
                                        in
                                        graph.edges}, name='wire_delay')

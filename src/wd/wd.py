@@ -34,9 +34,9 @@ class WD:
         component_delay = nx.get_node_attributes(G=self._graph, name=self.component_delay)
 
         # Used in _custom_weight function(). Get the highest gate delay
-        self._max_component_delay = max([int(d) for (node, d) in component_delay.items()])
+        self._max_component_delay = max([d for (node, d) in component_delay.items()])
 
-        node_attributes = {node: int(d) for (node, d) in component_delay.items()}
+        node_attributes = {node: d for (node, d) in component_delay.items()}
 
         # Change the component delay sign (-d)
         component_delay = {node: -1 * d for (node, d) in node_attributes.items()}
@@ -47,9 +47,8 @@ class WD:
 
         # Get wire delay (w)
         wire_delay = nx.get_edge_attributes(G=self._graph, name=self.wire_delay)
-
         # Create the weight (w,-d)
-        weights = {(v1, v2): (int(wire_delay), component_delay[v1]) for ((v1, v2), wire_delay) in wire_delay.items()}
+        weights = {(v1, v2): (wire_delay, component_delay[v1]) for ((v1, v2), wire_delay) in wire_delay.items()}
         self._weighted_graph.add_edges_from(weights)
         nx.set_edge_attributes(G=self._weighted_graph, values=weights, name=self.weight)
 
@@ -87,14 +86,14 @@ class WD:
                 self.w[src][target] = self._compute_w(path)
                 self.d[src][target] = self._compute_d(path)
 
-        print("D Matrix")
-        for (src, targets) in self.d.items():
-            print(str(sorted(targets.items())))
-        print("---------------------------------------------")
-        print("W Matrix")
-        print(str(self.w))
-        for (src, targets) in self.w.items():
-            print(str(sorted(targets.items())))
+        # print("D Matrix")
+        # for (src, targets) in self.d.items():
+        #     print(str(sorted(targets.items())))
+        # print("---------------------------------------------")
+        # print("W Matrix")
+        # print(str(self.w))
+        # for (src, targets) in self.w.items():
+        #     print(str(sorted(targets.items())))
 
     def _compute_w(self, path: list):
         """
