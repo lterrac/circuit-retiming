@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from src.opt import opt
 from src.wd import wd
 from src.utils import read_dot as rd
+from utils.generator import generate_from_correlator
 
 
 class Retimer:
@@ -44,8 +45,8 @@ class Retimer:
 
 
 if __name__ == '__main__':
-    G = rd.load_graph('/home/luca/circuit-retiming/graphs/rand-3.dot')
-    #G = generate_from_correlator(50)
+    #G = rd.load_graph('/home/luca/circuit-retiming/graphs/rand-3.dot')
+    G = generate_from_correlator(1000)
     retimer = Retimer(unopt_graph=G)
     #retimer._draw_graph(G)
     retimer.retime()
