@@ -15,18 +15,23 @@ def random_test():
     After the edges has been randomly moved the script runs both opt1 and opt2 and checks that the clock
     found by both algorithms is the same as the initial one.
     """
-    path = '/graphs'
+    path = '/home/luca/circuit-retiming/graphs'
     perf_test = [file for file in os.listdir(path) if 'rand-' in file]
     for file in perf_test:
         graph = rd.load_graph(path + '/' + file)
+        print("file")
+        print(file)
         retimer = rt.Retimer(graph)
         max_clock = max([weight['component_delay'] for (node, weight) in retimer.graph.nodes.data()])
+        print("theoretical clock")
         print(max_clock)
         retimer.graph = node_randomizer(retimer.graph)
         retimer.retime('opt1')
         assert max_clock == retimer.opt.min_clock
         retimer.retime('opt2')
         assert max_clock == retimer.opt.min_clock
+
+    print("All tests passed")
 
 
 if __name__ == '__main__':
