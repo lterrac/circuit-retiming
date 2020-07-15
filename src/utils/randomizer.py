@@ -10,8 +10,6 @@ def node_randomizer(graph: nx.DiGraph) -> nx.DiGraph:
             pick_from_back(graph, node)
         else:
             pick_from_front(graph, node)
-    print("ge")
-    print(graph.edges.data())
     return graph
 
 

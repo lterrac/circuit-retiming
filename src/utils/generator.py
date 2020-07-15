@@ -13,69 +13,80 @@ def generate_from_correlator(nodes: int):
     ----- n + 1      ---> n + 3
             |     +         |
     -----   n        ---> n + 2
+    The total number of nodes will be nodes + 1 in order to add the
+    last part of the correlator:
+
+    ----- n + 1
+            |   \
+    -----   n -- n + 2
+
     :param nodes: the desidered number of nodes in the circuit
     :return:
     """
     correlator = nx.DiGraph()
     correlator.add_nodes_from(['0', '1', '2'])
     nx.set_node_attributes(correlator, str(3), 'component_delay')
-    correlator.add_edges_from([('0', '1'), ('2', '0')])
+    correlator.add_edges_from([('0', '1'), ('2', '0'), ('1', '2')])
     nx.set_edge_attributes(correlator, str(0), 'wire_delay')
-    correlator.add_edge('1', '2')
+
     up = 2
     down = 1
 
     for i in range(up + 1, nodes, 2):
+        print(i)
         correlator.add_nodes_from([(str(i), {'component_delay': str(3)}), (str(i + 1), {'component_delay': str(7)})])
-        correlator.add_edges_from([(str(i), str(up), {'wire_delay': str(0)}),
-                                   (str(down), str(i), {'wire_delay': str(1)}),
-                                   (str(down), up, {'wire_delay': str(0)})
+        correlator.add_edges_from([(str(down), str(i), {'wire_delay': str(1)}),
+                                   (str(down), str(up), {'wire_delay': str(0)}),
+                                   (str(i + 1), str(up), {'wire_delay': str(0)})
                                    ])
-        up = i
-        down = i + 1
+        print(i)
+        print(down)
+        up = i + 1
+        down = i
 
-    correlator.add_edges_from([(str(down), str(up), {'wire_delay': str(0)})])
+    correlator.add_node(str(up + 1))
+    nx.set_node_attributes(correlator, str(3), 'component_delay')
+    correlator.add_edges_from([(str(down), str(up + 1), {'wire_delay': str(1)})])
+    correlator.add_edges_from([(str(up + 1), str(up), {'wire_delay': str(0)})])
     print(correlator.nodes.data())
     print(correlator.edges.data())
     nx.draw(correlator, pos=nx.circular_layout(correlator), with_labels=True, font_weight='bold')
     plt.show()
 
-
     return correlator
 
 
-def random_generator(n: int, k: int):
-    graph = nx.random_k_out_graph(n, k, self_loops=False, alpha=4000)
-    nx.draw(graph, pos=nx.circular_layout(graph), with_labels=True, font_weight='bold')
-    plt.show()
+def random_generator(n: int, k: int, number_of_test: int):
+    graph = nx.DiGraph(nx.MultiDiGraph.to_directed(nx.random_k_out_graph(n, k, self_loops=False, alpha=4000)))
 
     # Delete incoming arcs from 0 -> starting node
-    print(graph.edges)
-    graph.remove_edges_from([(v1, v2, weight) for (v1, v2, weight) in graph.in_edges if v2 is 0])
+    graph.remove_edges_from([(v1, v2) for (v1, v2) in graph.in_edges if v2 is 0])
 
-    graph.add_edges_from([(0, max(graph.nodes), {'wire_delay': 1})])
+    graph.add_edges_from([(0, max(graph.nodes))])
 
     for node in graph.nodes:
-        incoming = [(v1, v2) for (v1, v2, weight) in graph.in_edges if v2 is node]
-        print(incoming)
-        print(len(incoming))
+        incoming = [(v1, v2) for (v1, v2) in graph.in_edges if v2 == node]
         deleted_nodes = 0
         for edge in incoming:
-            keep = np.average(rnd.binomial(1, 0.1, 1000))
-            print(keep / 5.0)
-            print("incoming")
-            print(len(incoming))
-            print("outgoing")
-            print(graph.edges(edge[0]))
-            if keep < 0.5 and deleted_nodes < len(incoming) - 1 and len(graph.edges(edge[0])) > 1:
-                graph.remove_edges_from([edge])
+            keep = np.average(rnd.binomial(1, 0.55, 5))
+            if keep >= 0.4 and deleted_nodes < len(incoming) - 1 and len(graph.edges(edge[0])) > 1:
+                graph.remove_edge(edge[0], edge[1])
                 deleted_nodes = deleted_nodes + 1
 
+    graph.add_edges_from([(node, 0) for node in graph.nodes if node is not 0])
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-    nx.nx_agraph.write_dot(graph, '/home/luca/circuit-retiming/graphs/rand-3.dot')
-    nx.draw(graph, pos=nx.circular_layout(graph), with_labels=True, font_weight='bold')
-    plt.show()
+
+    if nx.is_strongly_connected(graph):
+        nx.nx_agraph.write_dot(graph,
+                               '/home/luca/circuit-retiming/graphs/rand-{}.dot'.format(number_of_test))
+        if number_of_test % 10 == 0:
+            print("{} done".format(number_of_test))
+            nx.draw(nx.to_directed(graph), pos=nx.circular_layout(graph), with_labels=True, font_weight='bold')
+            plt.show()
+        return 1
+    else:
+        return 0
 
 
 def performance_generator(n: int):
@@ -92,4 +103,7 @@ def performance_generator(n: int):
 
 
 if __name__ == "__main__":
-    generate_from_correlator(10)
+    # random_generator(10, 100, 1)
+    i = 0
+    while i < 200:
+        i = i + random_generator(50, 100, i)
