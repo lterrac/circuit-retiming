@@ -86,16 +86,16 @@ class WD:
                 self.w[src][target] = self._compute_w(path)
                 self.d[src][target] = self._compute_d(path)
 
-        print("D Matrix")
-        for (src, targets) in self.d.items():
-            print(str(sorted(targets.items())))
-        print("---------------------------------------------")
-        print("W Matrix")
-        print(str(self.w))
-        for (src, targets) in self.w.items():
-            print(str(sorted(targets.items())))
-        print("end wd")
-        print(self.all_pairs.items())
+        # print("D Matrix")
+        # for (src, targets) in self.d.items():
+        #     print(str(sorted(targets.items())))
+        # print("---------------------------------------------")
+        # print("W Matrix")
+        # print(str(self.w))
+        # for (src, targets) in self.w.items():
+        #     print(str(sorted(targets.items())))
+        # print("end wd")
+        # print(self.all_pairs.items())
         for node in self.w.items():
             assert len(node[1]) == len(self._graph.nodes)
         for node in self.d.items():
