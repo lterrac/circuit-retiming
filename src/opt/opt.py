@@ -64,7 +64,7 @@ class OPT:
         feasible, self.retimings = self._binary_search_recursive(clocks_explored, 0,
                                                                  len(clocks_explored) - 1)
         # Apply the legal retiming found to the graph
-        self._apply_retiming(self.retimed_graph, self.retimings)
+        self.retimed_graph = self._apply_retiming(self.retimed_graph, self.retimings)
 
         # Compute the minimum clock cycle
         self.min_clock, _ = self._clock_period(self.retimed_graph)
@@ -99,14 +99,9 @@ class OPT:
             predecessor_feasible, predecessor_retimings = self._checker(clocks[mid - 1][0])
             clocks[mid - 1] = (clocks[mid - 1][0], predecessor_feasible, predecessor_retimings)
 
-        # print("analyzr " + str(clocks[mid][0]))
-        # print("feas " + str(feasible))
-        # print("analyzr " + str(clocks[mid - 1][0]))
-        # print("pred " + str(predecessor_feasible))
-
         if feasible is True:
             if clocks[mid - 1][1] is False:
-                print("cloooooock " + str(mid))
+                print("cloooooock " + str(clocks[mid][0]))
                 print("ret " + str(retimings))
                 return feasible, retimings
             else:
@@ -152,37 +147,28 @@ class OPT:
         :param clock:
         :return: If the retiming is legal and the retiming to apply
         """
-        feasibility_graph = nx.DiGraph()
-        feasibility_graph.add_nodes_from(self.graph.nodes)
-        feasibility_graph.add_weighted_edges_from([(source, target, weight[self._wire_delay])
+        starting_graph = nx.DiGraph()
+        starting_graph.add_nodes_from(self.graph.nodes)
+        starting_graph.add_weighted_edges_from([(source, target, weight[self._wire_delay])
                                                    for (source, target, weight) in self.graph.edges.data()],
                                                   weight=self._wire_delay)
 
         # set r(v) -> lag to 0 for each node
-        nx.set_node_attributes(G=feasibility_graph, values=0, name=self._lag)
+        nx.set_node_attributes(G=starting_graph, values=0, name=self._lag)
 
-        total_retimings = {node: 0 for node in feasibility_graph.nodes}
-        partial_retimings = nx.get_node_attributes(feasibility_graph, self._lag)
-        for _ in range(len(feasibility_graph.nodes) - 1):
+        total_retimings = {node: 0 for node in starting_graph.nodes}
+        for _ in range(len(starting_graph.nodes) - 1):
             # Create Gr with the current values of r
-            self._apply_retiming(feasibility_graph, partial_retimings)
+            feasibility_graph = self._apply_retiming(starting_graph, total_retimings)
 
             # run CP algorithm to compute the delta_v of all nodes
             clock_threshold, delta_vs = self._clock_period(feasibility_graph)
 
-            # compute the graph incrementing lag of 1 <=> delta_v(v) > clock
-            nx.set_node_attributes(G=feasibility_graph,
-                                   values={node: (lag[self._lag] + 1 if delta_vs[node] > clock else lag[self._lag])
-                                           for (node, lag) in feasibility_graph.nodes.data()},
-                                   name=self._lag)
+            # compute the retimings incrementing lag of 1 <=> delta_v(v) > clock
+            total_retimings = {node: (total_retimings.get(node, 0) + lag[self._lag] + 1 if delta_vs[node] > clock else total_retimings.get(node, 0) + lag[self._lag])
+                                           for (node, lag) in feasibility_graph.nodes.data()}
 
-            # Since self._apply_retiming uses the retimings of the current iteration and then sets them to 0
-            # save the total retimings in order to display them after the search of the minimum clock cycle
-            partial_retimings = nx.get_node_attributes(feasibility_graph, self._lag)
-            total_retimings = {node: total_retimings.get(node, 0) + partial_retimings.get(node, 0)
-                               for node in set(total_retimings).union(partial_retimings)}
-
-        clock_threshold, _ = self._clock_period(feasibility_graph)
+        clock_threshold, _ = self._clock_period(self._apply_retiming(starting_graph, total_retimings))
 
         return clock_threshold <= clock, total_retimings
 
@@ -218,20 +204,20 @@ class OPT:
                     [delta_vs[outgoing_node]
                      for outgoing_node in
                      [outgoing for (outgoing, _) in no_registers_graph.in_edges(nbunch=node)]])
-
         return max(list(delta_vs.values())), {node: delta_vs[node] for node in no_registers_graph.nodes}
 
     def _apply_retiming(self, graph: nx.DiGraph, retimings: dict):
         """
-        Apply the retiming to the graph. This function has side effects:
-        - resets the lag attribute of the input graph
+        Apply the retiming to the graph.
         :param graph:
         :param retimings:
         :return: the retimed graph
         """
-        nx.set_node_attributes(G=graph, values=0, name=self._lag)
-        nx.set_edge_attributes(G=graph,
+        retimed_graph = nx.DiGraph(graph)
+        nx.set_node_attributes(G=retimed_graph, values=0, name=self._lag)
+        nx.set_edge_attributes(G=retimed_graph,
                                values={(v1, v2): (graph[v1][v2][self._wire_delay] + retimings[v2] - retimings[v1]) for
                                        (v1, v2)
                                        in
                                        graph.edges}, name=self._wire_delay)
+        return retimed_graph
