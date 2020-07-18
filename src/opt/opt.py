@@ -1,5 +1,5 @@
 import itertools
-
+import numpy as np
 import networkx as nx
 
 
@@ -101,8 +101,6 @@ class OPT:
 
         if feasible is True:
             if clocks[mid - 1][1] is False:
-                print("cloooooock " + str(clocks[mid][0]))
-                print("ret " + str(retimings))
                 return feasible, retimings
             else:
                 return self._binary_search_recursive(clocks, start, mid - 1)
@@ -150,8 +148,8 @@ class OPT:
         starting_graph = nx.DiGraph()
         starting_graph.add_nodes_from(self.graph.nodes)
         starting_graph.add_weighted_edges_from([(source, target, weight[self._wire_delay])
-                                                   for (source, target, weight) in self.graph.edges.data()],
-                                                  weight=self._wire_delay)
+                                                for (source, target, weight) in self.graph.edges.data()],
+                                               weight=self._wire_delay)
 
         # set r(v) -> lag to 0 for each node
         nx.set_node_attributes(G=starting_graph, values=0, name=self._lag)
@@ -186,24 +184,30 @@ class OPT:
                                                              for node in graph.nodes})
 
         # Pick only the edges with w(e) = 0
-        no_registers_graph.add_weighted_edges_from([(source, target, 0)
-                                                    for (source, target, weight) in graph.edges.data()
-                                                    if weight[self._wire_delay] == 0])
+
+        no_registers_graph.add_edges_from(
+            [(source, target) for (source, target, weight) in graph.edges.data() if weight[self._wire_delay] == 0])
 
         sorted_nodes = nx.topological_sort(no_registers_graph)
 
+        adjacency_matrix = nx.adjacency_matrix(no_registers_graph, nodelist=sorted(no_registers_graph.nodes)).toarray()
         delta_vs = {node: 0 for node in graph.nodes}
         for node in sorted_nodes:
             # If there are no incoming edges set delta_v to d(v)
             delta_vs[node] = no_registers_graph.nodes.data()[node][self._component_delay]
 
+            # Get incident edges
+            incident_edges = adjacency_matrix[:, int(node)]
+            try:
+                incident_edges = np.where(incident_edges > 0)
+            except:
+                incident_edges = None
+
             # Otherwise add the maximum d(u) between all the arcs u -> v
-            if node in [incident_node for incident_node in
-                        [incoming for (_, incoming) in no_registers_graph.in_edges]]:
+            if incident_edges is not None and incident_edges[0].size is not 0:
                 delta_vs[node] = delta_vs[node] + max(
-                    [delta_vs[outgoing_node]
-                     for outgoing_node in
-                     [outgoing for (outgoing, _) in no_registers_graph.in_edges(nbunch=node)]])
+                    [delta_vs[str(outgoing_node)]
+                     for outgoing_node in incident_edges[0]])
         return max(list(delta_vs.values())), {node: delta_vs[node] for node in no_registers_graph.nodes}
 
     def _apply_retiming(self, graph: nx.DiGraph, retimings: dict):
@@ -216,7 +220,7 @@ class OPT:
         retimed_graph = nx.DiGraph(graph)
         nx.set_node_attributes(G=retimed_graph, values=0, name=self._lag)
         nx.set_edge_attributes(G=retimed_graph,
-                               values={(v1, v2): (graph[v1][v2][self._wire_delay] + retimings[v2] - retimings[v1]) for
+                               values={(v1, v2): (self.w[v1][v2] + retimings[v2] - retimings[v1]) for
                                        (v1, v2)
                                        in
                                        graph.edges}, name=self._wire_delay)
