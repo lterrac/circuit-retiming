@@ -1,13 +1,13 @@
 strict digraph correlator {
 	graph [name=correlator];
-	h	 [component_delay=0];
-	3	 [component_delay=3];
-	4	 [component_delay=3];
-	5	 [component_delay=7];
+	0	 [component_delay=0];
+	1	 [component_delay=3];
+	2	 [component_delay=3];
+	3	 [component_delay=7];
 
-	h -> 3	 [wire_delay=2];
-	3 -> 4	 [wire_delay=0];
-	3 -> 5	 [wire_delay=0];
-	4 -> 5	 [wire_delay=0];
-	5 -> h	 [wire_delay=0];
+	0 -> 1	 [wire_delay=2];
+	1 -> 2	 [wire_delay=0];
+	1 -> 3	 [wire_delay=0];
+	2 -> 3	 [wire_delay=0];
+	3 -> 0	 [wire_delay=0];
 }

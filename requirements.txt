@@ -1,6 +1,7 @@
 networkx==2.4
-matplotlib==3.2.2
-graphviz==0.14
+matplotlib==3.3.0
+graphviz==0.14.1
 pygraphviz==1.5
 snakeviz==2.1.0
 numpy~=1.19.0
+scipy==1.5.1

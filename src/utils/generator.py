@@ -64,6 +64,7 @@ def random_generator(n: int, k: int, number_of_test: int):
 
     graph.add_edges_from([(0, max(graph.nodes))])
 
+    print(len(graph.edges))
     for node in graph.nodes:
         incoming = [(v1, v2) for (v1, v2) in graph.in_edges if v2 == node]
         deleted_nodes = 0
@@ -73,13 +74,19 @@ def random_generator(n: int, k: int, number_of_test: int):
                 graph.remove_edge(edge[0], edge[1])
                 deleted_nodes = deleted_nodes + 1
 
+    node_cycles = [(u, v) for (u, v) in graph.edges() if u in graph[v]]
+    print(len(graph.edges))
+    graph.remove_edges_from(node_cycles)
     graph.add_edges_from([(node, 0) for node in graph.nodes if node is not 0])
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-
-    if nx.is_strongly_connected(graph):
+    print(len(graph.edges))
+    nx.draw(nx.to_directed(graph), pos=nx.circular_layout(graph), with_labels=True, font_weight='bold')
+    plt.show()
+    if nx.is_weakly_connected(graph):
+        print("yes")
         nx.nx_agraph.write_dot(graph,
-                               '/home/luca/circuit-retiming/graphs/rand-{}.dot'.format(number_of_test))
+                               '/home/luca/circuit-retiming/testsetbug/np-{}.dot'.format(n, n))
         if number_of_test % 10 == 0:
             print("{} done".format(number_of_test))
             nx.draw(nx.to_directed(graph), pos=nx.circular_layout(graph), with_labels=True, font_weight='bold')
@@ -103,7 +110,7 @@ def performance_generator(n: int):
 
 
 if __name__ == "__main__":
-    # random_generator(10, 100, 1)
-    i = 0
-    while i < 200:
-        i = i + random_generator(50, 100, i)
+    random_generator(10, 100, 1)
+    # i = 0
+    # while i < 200:
+    #     i = i + random_generator(50, 100, i)

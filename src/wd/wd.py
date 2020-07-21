@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 
 
 class WD:
@@ -9,8 +10,9 @@ class WD:
     def __init__(self, graph: nx.DiGraph):
         self._graph = graph
         self._weighted_graph = nx.DiGraph()
-        self.w = {}
-        self.d = {}
+        self._matrix_dimension = len(graph)
+        self.w = None
+        self.d = None
         self.component_delay = 'component_delay'
         self.wire_delay = 'wire_delay'
         self.weight = 'weight'
@@ -22,7 +24,7 @@ class WD:
         """
         self._weight_edges()
         self._all_pairs_shortest_path()
-        return self._compute_wd()
+        self._compute_wd()
 
     def _weight_edges(self):
         """
@@ -60,8 +62,7 @@ class WD:
         :return:
         """
 
-        return attributes[self.weight][0] * self._max_component_delay + \
-               (self._max_component_delay - attributes[self.weight][1])
+        return attributes[self.weight][0] * self._max_component_delay + (self._max_component_delay - attributes[self.weight][1])
 
     def _all_pairs_shortest_path(self):
         """
@@ -72,34 +73,21 @@ class WD:
                                                              attributes)))
 
     def _compute_wd(self):
+        mat_dim = self._matrix_dimension
+        w = np.zeros((mat_dim, mat_dim), dtype=int)
+        d = np.zeros((mat_dim, mat_dim), dtype=int)
+        compute_w = self._compute_w
+        compute_d = self._compute_d
 
         for (src, targets) in self.all_pairs.items():
             for (target, path) in targets.items():
-                # create the dictionary if not already present
-                if src not in self.w:
-                    self.w[src] = {}
-                if src not in self.d:
-                    self.d[src] = {}
-
                 # add also the source node to compute the total w and d
                 path.insert(0, src)
-                self.w[src][target] = self._compute_w(path)
-                self.d[src][target] = self._compute_d(path)
+                w[int(src)][int(target)] = compute_w(path)
+                d[int(src)][int(target)] = compute_d(path)
 
-        # print("D Matrix")
-        # for (src, targets) in self.d.items():
-        #     print(str(sorted(targets.items())))
-        # print("---------------------------------------------")
-        # print("W Matrix")
-        # print(str(self.w))
-        # for (src, targets) in self.w.items():
-        #     print(str(sorted(targets.items())))
-        # print("end wd")
-        # print(self.all_pairs.items())
-        for node in self.w.items():
-            assert len(node[1]) == len(self._graph.nodes)
-        for node in self.d.items():
-            assert len(node[1]) == len(self._graph.nodes)
+        self.w = w
+        self.d = d
 
     def _compute_w(self, path: list):
         """

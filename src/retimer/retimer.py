@@ -14,11 +14,12 @@ class Retimer:
     def __init__(self, unopt_graph: nx.DiGraph):
         self.graph = self.preprocess_graph(unopt_graph)
         self.wd = wd.WD(graph=unopt_graph)
-        self.opt = None
+        self.opt = opt.OPT(self.graph, self.wd.w, self.wd.d)
 
     def retime(self, optimizer='opt1'):
         self.wd.wd()
-        self.opt = opt.OPT(self.graph, self.wd.w, self.wd.d)
+        self.opt.w = self.wd.w
+        self.opt.d = self.wd.d
         self.opt.opt(optimizer)
 
     @staticmethod
@@ -39,6 +40,7 @@ class Retimer:
         nx.set_node_attributes(G=graph, values=node_attributes, name='component_delay')
 
         wire_delay = nx.get_edge_attributes(G=graph, name='wire_delay')
+        print(wire_delay.items())
         weights = {(v1, v2): int(wire_delay) for ((v1, v2), wire_delay) in wire_delay.items()}
         nx.set_edge_attributes(G=graph, values=weights, name='wire_delay')
         return graph
