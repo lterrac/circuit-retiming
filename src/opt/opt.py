@@ -136,7 +136,7 @@ class OPT:
         try:
             retimings = nx.single_source_bellman_ford_path_length(G=feasibility_graph, source=extra_node)
             retimings.pop(extra_node)
-            return True, retimings
+            return True, np.array([x[1] for x in sorted(retimings.items(), key=lambda x: int(x[0]))], dtype=int)
         except nx.exception.NetworkXUnbounded:
             print("Negative cost cycle detected for clock {}...".format(clock))
             return False, None
@@ -156,7 +156,7 @@ class OPT:
         # set r(v) -> lag to 0 for each node
         nx.set_node_attributes(G=starting_graph, values=0, name=self._lag)
 
-        total_retimings = {node: 0 for node in starting_graph.nodes}
+        total_retimings = np.zeros(len(starting_graph), dtype=int)
         for _ in range(len(starting_graph.nodes) - 1):
             # Create Gr with the current values of r
             feasibility_graph = self._apply_retiming(starting_graph, total_retimings)
@@ -165,12 +165,13 @@ class OPT:
             clock_threshold, delta_vs = self._clock_period(feasibility_graph)
 
             # compute the retimings incrementing lag of 1 <=> delta_v(v) > clock
-            # print("ret")
-            # print(total_retimings)
-            total_retimings = {node: (
-                total_retimings[node] + lag[self._lag] + 1 if delta_vs[node] > clock else total_retimings[node] + lag[
-                    self._lag])
-                               for (node, lag) in feasibility_graph.nodes.data()}
+            print("cd")
+            print(clock)
+            print(delta_vs)
+            delta_vs = np.where(delta_vs > clock, 1, 0)
+            print(delta_vs)
+            if bool(np.any(delta_vs)) is True:
+                total_retimings = np.add(total_retimings, delta_vs)
 
         clock_threshold, _ = self._clock_period(self._apply_retiming(starting_graph, total_retimings))
         print("clock {} ct {} {}".format(clock, clock_threshold, clock_threshold <= clock))
@@ -197,8 +198,6 @@ class OPT:
         sorted_nodes = nx.topological_sort(no_registers_graph)
         adjacency_matrix = nx.adjacency_matrix(no_registers_graph,
                                                nodelist=sorted(no_registers_graph.nodes, key=int)).toarray().astype(int)
-        #    print("adj")
-        #   print(nx.adjacency_matrix(no_registers_graph, nodelist=sorted(no_registers_graph.nodes, key=int)))
         delta_vs = np.zeros(len(graph), dtype=int)
         for node in sorted_nodes:
             node = int(node)
@@ -214,17 +213,11 @@ class OPT:
             # Otherwise add the maximum d(u) between all the arcs u -> v
             if incident_edges is not None:
                 if incident_edges[0].size > 0:
-                    # print("b")
-                    # print(node)
-                    # print(incident_edges)
-                    # print(delta_vs)
-                    # print(delta_vs[incident_edges])
-                    # print(np.max(delta_vs[incident_edges]))
                     delta_vs[node] = delta_vs[node] + np.max(delta_vs[incident_edges])
         print("clock {}".format(np.max(delta_vs)))
-        return np.max(delta_vs), {node: delta_vs[int(node)] for node in no_registers_graph.nodes}
+        return np.max(delta_vs), delta_vs
 
-    def _apply_retiming(self, graph: nx.DiGraph, retimings: dict):
+    def _apply_retiming(self, graph: nx.DiGraph, retimings):
         """
         Apply the retiming to the graph.
         :param graph:
@@ -234,7 +227,7 @@ class OPT:
         retimed_graph = nx.DiGraph(graph)
         nx.set_node_attributes(G=retimed_graph, values=0, name=self._lag)
         nx.set_edge_attributes(G=retimed_graph,
-                               values={(v1, v2): (graph[v1][v2][self._wire_delay] + retimings[v2] - retimings[v1]) for
+                               values={(v1, v2): (graph[v1][v2][self._wire_delay] + retimings[int(v2)] - retimings[int(v1)]) for
                                        (v1, v2)
                                        in
                                        graph.edges}, name=self._wire_delay)
