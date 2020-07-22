@@ -28,6 +28,7 @@ def random_test():
         #retimer.graph = node_randomizer(retimer.graph)
         retimer.retime('opt1')
         assert max_clock == retimer.opt.min_clock
+        retimer = rt.Retimer(retimer.graph)
         retimer.retime('opt2')
         assert max_clock == retimer.opt.min_clock
 
