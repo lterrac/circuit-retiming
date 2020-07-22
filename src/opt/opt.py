@@ -8,13 +8,12 @@ class OPT:
     Class responsible of executing the OPT1 algorithm on a graph
     """
 
-    def __init__(self, graph: nx.DiGraph, w: dict, d: dict):
+    def __init__(self, graph: nx.DiGraph, w: np.core.ndarray, d: np.core.ndarray):
         self.graph = graph
         self.w = w
         self.d = d
         self.min_clock = 0
         self._d_range = []
-        self.retimed_graph = nx.DiGraph(self.graph)
         self.retimings = {}
         self._checker = None
         self._wire_delay = 'wire_delay'
@@ -44,11 +43,7 @@ class OPT:
         """
 
         # extract all possible d values from a dictionary of dictionaries and put them in a list
-        return sorted(list(set([
-            delay for target in [
-                targets.values() for targets in self.d.values()
-            ] for delay in target
-        ])))
+        return np.sort(np.unique(self.d.flatten()))
 
     def search_min_clock(self):
         """
@@ -59,15 +54,14 @@ class OPT:
         # keeps track of the clock already checked with the corresponding retimings
         # it is a kind of cache to save FEAS algorithm execution
         clocks_explored = [(clock_candidate, None, None) for clock_candidate in self._d_range]
-
         # Execute the binary search
         feasible, self.retimings = self._binary_search_recursive(clocks_explored, 0,
                                                                  len(clocks_explored) - 1)
         # Apply the legal retiming found to the graph
-        self.retimed_graph = self._apply_retiming(self.retimed_graph, self.retimings)
+        self._apply_retiming(self.graph, self.retimings)
 
         # Compute the minimum clock cycle
-        self.min_clock, _ = self._clock_period(self.retimed_graph)
+        self.min_clock, _ = self._clock_period(self.graph)
         print("f {} c {} r {}".format(feasible, self.min_clock, self.retimings))
 
     def _binary_search_recursive(self, clocks, start, end):
@@ -96,13 +90,11 @@ class OPT:
 
         # if the predecessor is not explored do it
         if feasible is True and clocks[mid - 1][1] is None:
-                predecessor_feasible, predecessor_retimings = self._checker(clocks[mid - 1][0])
-                clocks[mid - 1] = (clocks[mid - 1][0], predecessor_feasible, predecessor_retimings)
+            predecessor_feasible, predecessor_retimings = self._checker(clocks[mid - 1][0])
+            clocks[mid - 1] = (clocks[mid - 1][0], predecessor_feasible, predecessor_retimings)
 
         if feasible is True:
             if clocks[mid - 1][1] is False:
-                print("cloooooock " + str(clocks[mid][0]))
-                print("ret " + str(retimings))
                 return feasible, retimings
             else:
                 return self._binary_search_recursive(clocks, start, mid - 1)
@@ -122,10 +114,10 @@ class OPT:
         feasibility_graph.add_weighted_edges_from([(target, source, weight[self._wire_delay])
                                                    for (source, target, weight) in self.graph.edges.data()])
         # add second type of constraint from the original graph: r(u) - r(v) <= W(u,v) - 1 if D(u,v) > c
-        feasibility_graph.add_weighted_edges_from([(target, source, self.w[source][target] - 1)
+        feasibility_graph.add_weighted_edges_from([(target, source, self.w[int(source)][int(target)] - 1)
                                                    for (source, target) in list(
                 itertools.product(feasibility_graph.nodes, feasibility_graph.nodes))
-                                                   if self.d[source][target] > clock])
+                                                   if self.d[int(source)][int(target)] > clock])
         # add extra node for Bellman Ford
         extra_node = 'extra_node'
         feasibility_graph.add_node(extra_node)
@@ -147,34 +139,29 @@ class OPT:
         :param clock:
         :return: If the retiming is legal and the retiming to apply
         """
-        starting_graph = nx.DiGraph()
-        starting_graph.add_nodes_from(self.graph.nodes)
-        starting_graph.add_weighted_edges_from([(source, target, weight[self._wire_delay])
-                                                for (source, target, weight) in self.graph.edges.data()],
-                                               weight=self._wire_delay)
+
+        clock_period = self._clock_period
+        apply_retiming = self._apply_retiming
+        graph = nx.DiGraph(self.graph)
 
         # set r(v) -> lag to 0 for each node
-        nx.set_node_attributes(G=starting_graph, values=0, name=self._lag)
+        nx.set_node_attributes(G=graph, values=0, name=self._lag)
 
-        total_retimings = np.zeros(len(starting_graph), dtype=int)
-        for _ in range(len(starting_graph.nodes) - 1):
+        total_retimings = np.zeros(len(graph), dtype=int)
+        for _ in range(len(graph) - 1):
             # Create Gr with the current values of r
-            feasibility_graph = self._apply_retiming(starting_graph, total_retimings)
+            apply_retiming(graph, total_retimings)
 
             # run CP algorithm to compute the delta_v of all nodes
-            clock_threshold, delta_vs = self._clock_period(feasibility_graph)
+            clock_threshold, delta_vs = clock_period(graph)
 
             # compute the retimings incrementing lag of 1 <=> delta_v(v) > clock
-            print("cd")
-            print(clock)
-            print(delta_vs)
             delta_vs = np.where(delta_vs > clock, 1, 0)
-            print(delta_vs)
             if bool(np.any(delta_vs)) is True:
                 total_retimings = np.add(total_retimings, delta_vs)
 
-        clock_threshold, _ = self._clock_period(self._apply_retiming(starting_graph, total_retimings))
-        print("clock {} ct {} {}".format(clock, clock_threshold, clock_threshold <= clock))
+        apply_retiming(graph, total_retimings)
+        clock_threshold, _ = clock_period(graph)
         return bool(clock_threshold <= clock), total_retimings
 
     def _clock_period(self, graph: nx.DiGraph):
@@ -183,39 +170,33 @@ class OPT:
         :param graph:
         :return:
         """
+        d = self.d
+        wire_delay = self._wire_delay
 
-        no_registers_graph = nx.DiGraph()
-        no_registers_graph.add_nodes_from(graph)
-
-        nx.set_node_attributes(G=no_registers_graph, values={node: {self._component_delay: self.d[node][node]}
-                                                             for node in graph.nodes})
+        # If there are no incoming edges set delta_v to d(v)
+        nodes_delay = np.copy(d.diagonal())
 
         # Pick only the edges with w(e) = 0
-        no_registers_graph.add_weighted_edges_from([(source, target, 1)
-                                                    for (source, target, weight) in graph.edges.data()
-                                                    if weight[self._wire_delay] == 0])
+        no_registers_adjacency = np.where(nx.to_numpy_array(graph, dtype=int, weight=wire_delay, nonedge=-1) == 0, 1, 0)
+
+        #Create a graph and do the topological sort
+        no_registers_graph = nx.from_numpy_matrix(no_registers_adjacency, create_using=nx.DiGraph)
 
         sorted_nodes = nx.topological_sort(no_registers_graph)
-        adjacency_matrix = nx.adjacency_matrix(no_registers_graph,
-                                               nodelist=sorted(no_registers_graph.nodes, key=int)).toarray().astype(int)
-        delta_vs = np.zeros(len(graph), dtype=int)
+
         for node in sorted_nodes:
             node = int(node)
-            # If there are no incoming edges set delta_v to d(v)
-            delta_vs[node] = no_registers_graph.nodes.data()[str(node)][self._component_delay]
 
             # Get incident edges
-            incident_edges = adjacency_matrix[:, node]
+            incident_edges = no_registers_adjacency[:, node]
             try:
                 incident_edges = np.where(incident_edges > 0)
             except:
                 incident_edges = None
             # Otherwise add the maximum d(u) between all the arcs u -> v
-            if incident_edges is not None:
-                if incident_edges[0].size > 0:
-                    delta_vs[node] = delta_vs[node] + np.max(delta_vs[incident_edges])
-        print("clock {}".format(np.max(delta_vs)))
-        return np.max(delta_vs), delta_vs
+            if incident_edges is not None and incident_edges[0].size > 0:
+                nodes_delay[node] = nodes_delay[node] + np.max(nodes_delay[incident_edges])
+        return np.max(nodes_delay), nodes_delay
 
     def _apply_retiming(self, graph: nx.DiGraph, retimings):
         """
@@ -224,11 +205,10 @@ class OPT:
         :param retimings:
         :return: the retimed graph
         """
-        retimed_graph = nx.DiGraph(graph)
-        nx.set_node_attributes(G=retimed_graph, values=0, name=self._lag)
-        nx.set_edge_attributes(G=retimed_graph,
-                               values={(v1, v2): (graph[v1][v2][self._wire_delay] + retimings[int(v2)] - retimings[int(v1)]) for
+        wire_delay = self._wire_delay
+        #nx.set_node_attributes(G=graph, values=0, name=self._lag)
+        nx.set_edge_attributes(G=graph,
+                               values={(v1, v2): (graph[v1][v2][wire_delay] + retimings[int(v2)] - retimings[int(v1)]) for
                                        (v1, v2)
                                        in
                                        graph.edges}, name=self._wire_delay)
-        return retimed_graph

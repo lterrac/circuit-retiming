@@ -16,7 +16,7 @@ def random_test():
     found by both algorithms is the same as the initial one.
     """
     path = '/home/luca/circuit-retiming/graphs/'
-    perf_test = [file for file in os.listdir(path) if 'bug.dot' in file]
+    perf_test = [file for file in os.listdir(path) if 'rand-' in file]
     for file in perf_test:
         graph = rd.load_graph(path + '/' + file)
         print("file")
@@ -25,7 +25,7 @@ def random_test():
         max_clock = max([weight['component_delay'] for (node, weight) in retimer.graph.nodes.data()])
         print("theoretical clock")
         print(max_clock)
-        #retimer.graph = node_randomizer(retimer.graph)
+        retimer.graph = node_randomizer(retimer.graph)
         retimer.retime('opt1')
         assert max_clock == retimer.opt.min_clock
         retimer = rt.Retimer(retimer.graph)

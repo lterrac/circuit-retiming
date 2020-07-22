@@ -6,11 +6,11 @@ strict digraph "" {
 	4	 [component_delay=3];
 	3 -> 4	 [wire_delay=1];
 	1	 [component_delay=3];
-	1 -> 0	 [wire_delay=3];
+	1 -> 0	 [wire_delay=1];
 	2	 [component_delay=3];
-	1 -> 2	 [wire_delay=0];
-	2 -> 0	 [wire_delay=4];
-	2 -> 4	 [wire_delay=3];
+	1 -> 2	 [wire_delay=1];
+	2 -> 0	 [wire_delay=1];
+	2 -> 4	 [wire_delay=0];
 	4 -> 0	 [wire_delay=2];
-	4 -> 1	 [wire_delay=0];
+	4 -> 1	 [wire_delay=2];
 }

@@ -94,8 +94,10 @@ class WD:
         :param path: path from the source to the target node
         :return: the sum all the wire delays along a path
         """
-        return sum([self._weighted_graph[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
-                    if v2 in self._weighted_graph[v1]])
+        grapg = self._weighted_graph
+        edge = list(grapg.edges.data())
+        return sum([grapg[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
+                    if v2 in grapg[v1]])
 
     def _compute_d(self, path: list):
         """
@@ -103,6 +105,7 @@ class WD:
         :return: the sum all the gate delays along a path plus the target one's
         """
         target = path[-1]
+        nodes_data = self._weighted_graph.nodes.data()
         return self._weighted_graph.nodes[target][self.component_delay] - sum(
             [self._weighted_graph[v1][v2][self.weight][1] for v1, v2 in zip(path, path[1:])
              if v2 in self._weighted_graph[v1]])
