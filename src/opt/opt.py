@@ -1,7 +1,10 @@
+import cProfile
 import itertools
+import time
+
 import numpy as np
 import networkx as nx
-
+import functools
 
 class OPT:
     """
@@ -9,6 +12,7 @@ class OPT:
     """
 
     def __init__(self, graph: nx.DiGraph, w: np.core.ndarray, d: np.core.ndarray):
+        self.node_delay = None
         self.graph = graph
         self.w = w
         self.d = d
@@ -26,6 +30,8 @@ class OPT:
         :param optimizer: the algorithm to use
         :return: void
         """
+        self.node_delay = np.copy(self.d.diagonal())
+        init = time.time()
         self._d_range = self._create_d_range()
 
         if optimizer is "opt1":
@@ -34,6 +40,9 @@ class OPT:
             self._checker = self._feas_checker
 
         self.search_min_clock()
+        end = time.time()
+        print("{} algorithm {}".format(optimizer,end - init))
+
         print("minimum clock cycle: {}".format(self.min_clock))
 
     def _create_d_range(self):
@@ -43,7 +52,7 @@ class OPT:
         """
 
         # extract all possible d values from a dictionary of dictionaries and put them in a list
-        return np.sort(np.unique(self.d.flatten()))
+        return np.sort(np.unique(self.d.ravel()))
 
     def search_min_clock(self):
         """
@@ -62,7 +71,7 @@ class OPT:
 
         # Compute the minimum clock cycle
         self.min_clock, _ = self._clock_period(self.graph)
-        print("f {} c {} r {}".format(feasible, self.min_clock, self.retimings))
+        #print("f {} c {} r {}".format(feasible, self.min_clock, self.retimings))
 
     def _binary_search_recursive(self, clocks, start, end):
         """
@@ -133,6 +142,7 @@ class OPT:
             print("Negative cost cycle detected for clock {}...".format(clock))
             return False, None
 
+    @functools.lru_cache(maxsize=1000)
     def _feas_checker(self, clock: int):
         """
         Check if a legal retiming exists given a clock duration using FEAS algorithm
@@ -164,17 +174,16 @@ class OPT:
         clock_threshold, _ = clock_period(graph)
         return bool(clock_threshold <= clock), total_retimings
 
+    @functools.lru_cache(maxsize=1000)
     def _clock_period(self, graph: nx.DiGraph):
         """
         Apply the CP algorithm and compute the circuit clock period
         :param graph:
         :return:
         """
-        d = self.d
         wire_delay = self._wire_delay
-
         # If there are no incoming edges set delta_v to d(v)
-        nodes_delay = np.copy(d.diagonal())
+        nodes_delay = self.node_delay
 
         # Pick only the edges with w(e) = 0
         no_registers_adjacency = np.where(nx.to_numpy_array(graph, dtype=int, weight=wire_delay, nonedge=-1) == 0, 1, 0)
@@ -206,7 +215,6 @@ class OPT:
         :return: the retimed graph
         """
         wire_delay = self._wire_delay
-        #nx.set_node_attributes(G=graph, values=0, name=self._lag)
         nx.set_edge_attributes(G=graph,
                                values={(v1, v2): (graph[v1][v2][wire_delay] + retimings[int(v2)] - retimings[int(v1)]) for
                                        (v1, v2)
