@@ -58,6 +58,7 @@ class WD:
         """
         Define a new weight by combining w and -d using the maximum value of d in order to prioritize the comparison
         first on w  (pick the lowest) and then on d (pick the highest one since the original comparison is done with -d).
+        Formula w * max(all component delays) + max(all component delays) - (-d)
         :param attributes:
         :return:
         """
@@ -95,7 +96,6 @@ class WD:
         :return: the sum all the wire delays along a path
         """
         grapg = self._weighted_graph
-        edge = list(grapg.edges.data())
         return sum([grapg[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
                     if v2 in grapg[v1]])
 
@@ -105,7 +105,6 @@ class WD:
         :return: the sum all the gate delays along a path plus the target one's
         """
         target = path[-1]
-        nodes_data = self._weighted_graph.nodes.data()
         return self._weighted_graph.nodes[target][self.component_delay] - sum(
             [self._weighted_graph[v1][v2][self.weight][1] for v1, v2 in zip(path, path[1:])
              if v2 in self._weighted_graph[v1]])

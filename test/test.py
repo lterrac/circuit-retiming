@@ -1,9 +1,9 @@
 import os
-
-import src.utils.read_dot as rd
+import src.utils.utilities as utils
 import src.retimer.retimer as rt
-from utils.randomizer import node_randomizer
-
+import src.utils.generator as gn
+import networkx as nx
+import matplotlib.pyplot as plt
 
 def random_test():
     """
@@ -18,14 +18,15 @@ def random_test():
     path = '/home/luca/circuit-retiming/graphs/'
     perf_test = [file for file in os.listdir(path) if 'rand-' in file]
     for file in perf_test:
-        graph = rd.load_graph(path + '/' + file)
+        graph = utils.load_graph(path + '/' + file)
+        graph = utils.preprocess_graph(graph)
         print("file")
         print(file)
         retimer = rt.Retimer(graph)
         max_clock = max([weight['component_delay'] for (node, weight) in retimer.graph.nodes.data()])
         print("theoretical clock")
         print(max_clock)
-        retimer.graph = node_randomizer(retimer.graph)
+        retimer.graph = utils.node_randomizer(retimer.graph)
         retimer.retime('opt1')
         assert max_clock == retimer.opt.min_clock
         retimer = rt.Retimer(retimer.graph)
@@ -35,7 +36,36 @@ def random_test():
     print("All tests passed")
 
 
+def correlator_test(correlator_dimension=None):
+    """
+    Run OPT1 and OPT2 on the correlator circuit presented in the paper. If no parameter
+    is passed the exact one is chosen, otherwise a correlator with the desired dimension
+    will be created.
+    """
+    if correlator_dimension is None:
+        path = '/home/luca/circuit-retiming/graphs/correlator.dot'
+        graph = utils.load_graph(path)
+        graph = utils.preprocess_graph(graph)
+    else:
+        graph = gn.generate_from_correlator(correlator_dimension)
+
+    if correlator_dimension < 8:
+        max_clock = 13
+    else:
+        max_clock = 14
+
+    graph = utils.preprocess_graph(graph)
+    retimer = rt.Retimer(graph)
+    print("theoretical clock")
+    print(max_clock)
+    retimer.retime('opt1')
+    assert max_clock == retimer.opt.min_clock
+    retimer = rt.Retimer(retimer.graph)
+    retimer.retime('opt2')
+    assert max_clock == retimer.opt.min_clock
+
+    print("All tests passed")
+
+
 if __name__ == '__main__':
-    random_test()
-    # for i in range(5000):
-    #     random_test()
+    correlator_test(80)

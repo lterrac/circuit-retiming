@@ -1,50 +1,85 @@
 import os
 import cProfile
-
+import time
 import networkx as nx
-
-import src.utils.read_dot as rd
-import src.utils.randomizer as randomizer
+import src.utils.utilities as utils
 import src.retimer.retimer as rt
 
+def bench_memory():
+    """
+    Bench both opt1 and opt2 memory consumption using the graph generated for the performance tests. The execution times
+    are printed in the terminal. In order to process bigger graphs and save time, matrices W and D are
+    directly passed to the retimer that executes opt2, avoiding to be computed twice per graph.
+    """
+    pass
 
-def performance_test():
+
+def bench_cpu(randomize=False):
     """
-    Run the performance test with both opt1 and opt2. To do this the algorithms are benched with some path graphs
-    with and increasing number of edges. This is done to prove that, despite the differences in implementation, opt2
-    has a better complexity than opt1.
+    Bench both opt1 and opt2 execution time using the graph generated for the performance tests. The execution times
+    are printed in the terminal. In order to process bigger graphs and save time, matrices W and D are
+    directly passed to the retimer that executes opt2, avoiding to be computed twice per graph.
     """
-    path = '/home/luca/circuit-retiming/graphs/'
-    #perf_test = [file for file in os.listdir(path) if 'err-5.dot' in file]
-    perf_test = [file for file in os.listdir(path) if 'perf-' in file]
+    path = '/home/luca/circuit-retiming/perf-graphs/'
+    perf_test = [file for file in os.listdir(path) if 'perf' in file]
     for file in sorted(perf_test):
-        print(file)
-        graph = rd.load_graph(path + '/' + file)
-        retimer = rt.Retimer(graph)
-        graph = randomizer.node_randomizer(retimer.graph)
-        retimer.graph = graph
-        nx.nx_agraph.write_dot(retimer.graph, '/home/luca/circuit-retiming/perf-rand/np-{}'.format(file))
-        max_clock = max([weight['component_delay'] for (node, weight) in retimer.graph.nodes.data()])
+        graph = utils.load_graph(path + '/' + file)
+        graph = utils.preprocess_graph(graph)
+
+        if randomize is True:
+            graph = utils.node_randomizer(graph)
+            nx.nx_agraph.write_dot(graph, '/home/luca/circuit-retiming/perf-graphs/np-{}'.format(file))
+
+        max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
+        retimer = rt.Retimer(graph.copy())
+        init = time.time()
+        retimer.retime('opt1')
+        end = time.time()
+        print("opt1 {}".format(end - init))
+        assert max_clock == retimer.opt.min_clock
+        nretimer = rt.Retimer(graph.copy())
+        nretimer.opt.w = retimer.wd.w
+        nretimer.opt.d = retimer.wd.d
+        del retimer
+        nretimer.opt.opt('opt2')
+        assert max_clock == nretimer.opt.min_clock
+        del nretimer
+
+
+def profile(randomize=False):
+    """
+    Profile both opt1 and opt2 using the graph generated for the performance tests.
+    cProfiler output files can be visualized with snakeviz
+    """
+    path = '/home/luca/circuit-retiming/perf-graphs/'
+    perf_test = [file for file in os.listdir(path) if 'np-perf' in file]
+    for file in sorted(perf_test):
+        graph = utils.load_graph(path + '/' + file)
+        graph = utils.preprocess_graph(graph)
+
+        if randomize is True:
+            graph = utils.node_randomizer(graph)
+            nx.nx_agraph.write_dot(graph, '/home/luca/circuit-retiming/perf-graphs/np-{}'.format(file))
+
+        max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
+        retimer = rt.Retimer(graph.copy())
         pr = cProfile.Profile()
         pr.enable()
         retimer.retime('opt1')
         pr.disable()
         assert max_clock == retimer.opt.min_clock
-        pr.dump_stats('../profile-results-optimized/np-se-cache-{}-opt1.out'.format(file))
-        retimer = rt.Retimer(graph)
-        #graph = randomizer.node_randomizer(retimer.graph)
-        retimer.graph = graph
+        pr.dump_stats('../profile-results-optimized/{}-opt1.out'.format(file))
+        del retimer
+
+        nretimer = rt.Retimer(graph.copy())
         pr = cProfile.Profile()
         pr.enable()
-        retimer.retime('opt2')
+        nretimer.retime('opt2')
+        assert max_clock == nretimer.opt.min_clock
         pr.disable()
-        assert max_clock == retimer.opt.min_clock
-        pr.dump_stats('../profile-results-optimized/np-se-cache-{}-opt2.out'.format(file))
-        retimer.graph = graph
-        #print("opt1: {}".format(str(timeit.timeit(retimer.retime('opt1')))))
-        #print("opt2: {}".format(str(timeit.timeit(retimer.retime('opt2')))))
+        pr.dump_stats('../profile-results-optimized/{}-opt2.out'.format(file))
+        del nretimer
 
 
 if __name__ == '__main__':
-    #for i in range(100):
-    performance_test()
+    profile()
