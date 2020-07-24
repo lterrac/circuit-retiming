@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy.random as rnd
 import numpy as np
 
+root = '/path_to_the_repo/circuit-retiming/'
 
 def generate_from_correlator(nodes: int):
     """
@@ -89,7 +90,7 @@ def random_generator(n: int, k: int):
     # Save it only if it is connected
     if nx.is_weakly_connected(graph):
         nx.nx_agraph.write_dot(graph,
-                               '/home/luca/circuit-retiming/testsetbug/np-{}.dot'.format(n, n))
+                               root + 'testsetbug/np-{}.dot'.format(n, n))
 
 
 def performance_generator(n: int):
@@ -106,4 +107,4 @@ def performance_generator(n: int):
     graph.add_edge(max(graph.nodes), 0)
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-    nx.nx_agraph.write_dot(graph, '/home/luca/circuit-retiming/graphs/perf-{}.dot'.format(str(n)))
+    nx.nx_agraph.write_dot(graph, root + 'graphs/perf-{}.dot'.format(str(n)))

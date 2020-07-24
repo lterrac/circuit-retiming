@@ -5,6 +5,8 @@ import src.utils.generator as gn
 import networkx as nx
 import matplotlib.pyplot as plt
 
+root = '/path_to_the_repo/circuit-retiming/graphs/'
+
 def random_test():
     """
     Run a random test to test the correctness of the algorithms. In order to do this a random graph is
@@ -15,7 +17,7 @@ def random_test():
     After the edges has been randomly moved the script runs both opt1 and opt2 and checks that the clock
     found by both algorithms is the same as the initial one.
     """
-    path = '/home/luca/circuit-retiming/graphs/'
+    path = root
     perf_test = [file for file in os.listdir(path) if 'rand-' in file]
     for file in perf_test:
         graph = utils.load_graph(path + '/' + file)
@@ -43,7 +45,7 @@ def correlator_test(correlator_dimension=None):
     will be created.
     """
     if correlator_dimension is None:
-        path = '/home/luca/circuit-retiming/graphs/correlator.dot'
+        path = root + 'correlator.dot'
         graph = utils.load_graph(path)
         graph = utils.preprocess_graph(graph)
     else:
