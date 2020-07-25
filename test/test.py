@@ -2,12 +2,9 @@ import os
 import src.utils.utilities as utils
 import src.retimer.retimer as rt
 import src.utils.generator as gn
-import networkx as nx
-import matplotlib.pyplot as plt
 
-root = '/path_to_the_repo/circuit-retiming/graphs/'
 
-def random_test():
+def random_test(test_path: str):
     """
     Run a random test to test the correctness of the algorithms. In order to do this a random graph is
     generated, some edges are pruned and some weights are moved along the circuit paths.
@@ -17,9 +14,9 @@ def random_test():
     After the edges has been randomly moved the script runs both opt1 and opt2 and checks that the clock
     found by both algorithms is the same as the initial one.
     """
-    path = root
-    perf_test = [file for file in os.listdir(path) if 'rand-' in file]
-    for file in perf_test:
+    path = os.getcwd() + '/../' + test_path
+    perf_test = [file for file in os.listdir(path)]
+    for file in sorted(perf_test):
         graph = utils.load_graph(path + '/' + file)
         graph = utils.preprocess_graph(graph)
         print("file")
@@ -44,8 +41,10 @@ def correlator_test(correlator_dimension=None):
     is passed the exact one is chosen, otherwise a correlator with the desired dimension
     will be created.
     """
+    path = os.getcwd() + '/../corr-graphs'
+    perf_test = [file for file in os.listdir(path)]
     if correlator_dimension is None:
-        path = root + 'correlator.dot'
+        path = path + 'correlator.dot'
         graph = utils.load_graph(path)
         graph = utils.preprocess_graph(graph)
     else:
@@ -70,4 +69,4 @@ def correlator_test(correlator_dimension=None):
 
 
 if __name__ == '__main__':
-    correlator_test(80)
+    correlator_test(300)

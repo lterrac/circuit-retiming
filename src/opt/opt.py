@@ -186,7 +186,7 @@ class OPT:
         nodes_delay = np.copy(self.d.diagonal())
 
         # Pick only the edges with w(e) = 0. Use the adjacency matrix to take advantage of numpy arrays
-        no_registers_adjacency = np.where(nx.to_numpy_array(graph, dtype=int, weight=wire_delay, nonedge=-1) == 0, 1, 0)
+        no_registers_adjacency = np.where(nx.to_numpy_array(graph, nodelist=sorted(graph.nodes, key=int), dtype=int, weight=wire_delay, nonedge=-1,) == 0, 1, 0)
 
         # Create a graph and do the topological sort
         no_registers_graph = nx.from_numpy_matrix(no_registers_adjacency, create_using=nx.DiGraph)

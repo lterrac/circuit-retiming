@@ -1,9 +1,8 @@
+import os
 import networkx as nx
-import matplotlib.pyplot as plt
 import numpy.random as rnd
 import numpy as np
 
-root = '/path_to_the_repo/circuit-retiming/'
 
 def generate_from_correlator(nodes: int):
     """
@@ -46,21 +45,28 @@ def generate_from_correlator(nodes: int):
     correlator.add_edges_from([(str(down), str(up), {'wire_delay': str(0)})])
     correlator.add_edges_from([(str(up + 1), str(up), {'wire_delay': str(0)})])
 
+
+    path = os.getcwd() + '/../corr-graphs/'
+
+    nx.nx_agraph.write_dot(correlator, path + 'corr-{}.dot'.format(str(nodes)))
+
     return correlator
 
 
-def random_generator(n: int, k: int):
+def random_generator(n: int, k: int, alpha: int, graph_version: int):
     """
     Generates a random connected graph with all the node attributes set to 3 and the edge weights to 1
+    :param graph_version: file version
+    :param alpha:
     :param n: number of nodes
     :param k:
     :return:
     """
     # Generate an almost complete graph
-    graph = nx.DiGraph(nx.MultiDiGraph.to_directed(nx.random_k_out_graph(n, k, self_loops=False, alpha=4000)))
+    graph = nx.DiGraph(nx.MultiDiGraph.to_directed(nx.random_k_out_graph(n, k, self_loops=False, alpha=alpha)))
 
-    # Delete incoming arcs from 0 -> starting node
-    graph.remove_edges_from([(v1, v2) for (v1, v2) in graph.in_edges if v2 is 0])
+    # # Delete incoming arcs from 0 -> starting node
+    # graph.remove_edges_from([(v1, v2) for (v1, v2) in graph.in_edges if v2 is 0])
 
     # Connect the first and the last node
     graph.add_edges_from([(0, max(graph.nodes))])
@@ -77,7 +83,7 @@ def random_generator(n: int, k: int):
                 graph.remove_edge(edge[0], edge[1])
                 deleted_nodes = deleted_nodes + 1
 
-    # Delete node cycles in order to save the graph as strict
+    # Delete node cycles in order to save the graph as strict. Otherwise the graph is by default a multi-weight graph
     node_cycles = [(u, v) for (u, v) in graph.edges() if u in graph[v]]
     graph.remove_edges_from(node_cycles)
 
@@ -86,11 +92,12 @@ def random_generator(n: int, k: int):
     # Set the attributes
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-
     # Save it only if it is connected
     if nx.is_weakly_connected(graph):
-        nx.nx_agraph.write_dot(graph,
-                               root + 'testsetbug/np-{}.dot'.format(n, n))
+        nx.nx_agraph.write_dot(graph, os.getcwd() + '/../rand-graphs/clean/{}/rand-{}-{}.dot'.format(n, n, graph_version))
+        return True
+    else:
+        return False
 
 
 def performance_generator(n: int):
@@ -107,4 +114,8 @@ def performance_generator(n: int):
     graph.add_edge(max(graph.nodes), 0)
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-    nx.nx_agraph.write_dot(graph, root + 'graphs/perf-{}.dot'.format(str(n)))
+    nx.nx_agraph.write_dot(graph, root + 'perf-graphs/clean/perf-{}.dot'.format(str(n)))
+
+
+if __name__ == '__main__':
+    random_generator(n=100, k=100, alpha=4000, graph_version=1)
