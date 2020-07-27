@@ -60,13 +60,12 @@ class WD:
         """
         Define a new weight by combining w and -d using the maximum value of d in order to prioritize the comparison
         first on w  (pick the lowest) and then on d (pick the highest one since the original comparison is done with -d).
-        Formula w * max(all component delays) + max(all component delays) - (-d)
+        Formula w * max(all component delays) + max(all component delays) + (-d)
         :param attributes:
         :return:
         """
-
         return attributes[self.weight][0] * self._max_component_delay + (
-                self._max_component_delay - attributes[self.weight][1])
+                self._max_component_delay + attributes[self.weight][1])
 
     def _all_pairs_shortest_path(self):
         """

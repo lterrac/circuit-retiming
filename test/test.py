@@ -69,4 +69,4 @@ def correlator_test(correlator_dimension=None):
 
 
 if __name__ == '__main__':
-    correlator_test(300)
+    random_test('rand-graphs/clean/50')

@@ -44,6 +44,7 @@ def bench_cpu(test_path: str, randomize=False):
     path = os.getcwd() + '/../' + test_path
     perf_test = [file for file in os.listdir(path)]
     for file in sorted(perf_test):
+        print(file)
         graph = utils.load_graph(path + '/' + file)
         graph = utils.preprocess_graph(graph)
 
@@ -105,4 +106,4 @@ def profile(test_path: str, randomize=False):
 
 
 if __name__ == '__main__':
-    profile('rand-graphs/100', False)
+    bench_cpu('perf-graphs/randomized', False)
