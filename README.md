@@ -106,7 +106,7 @@ The algorithms are contained in the files:
 A problem arose during the development of the project was define the weight to use in the WD algorithm.
 In fact, the algorithm requires to solve an all pairs shortest path algorithm using a weight defined as a tuple `(w(e), -d(u))` where `e` is the considere edge and `u` is the node that has `e` as an outgoing arc. Unfortunately, the functions offered by NetworkX allows on a scalar value as weight. So, in order to overcome this issue a custom weighting function is passed to the all pairs algorithm and it works as follows:
 1) Pick the maximum value between all the nodes' delays
-2) Define the scalar weight as: w(e) * max(all component delays) + max(all component delays) - (-d(u)).
+2) Define the scalar weight as: w(e) * max(all component delays) + max(all component delays) + (-d(u)).
 
 An example is provided below:  
 ![Untitled Diagram](https://user-images.githubusercontent.com/25181201/88568487-5a01c480-d039-11ea-9826-23558874b5b6.png)
