@@ -3,5 +3,6 @@ matplotlib==3.3.0
 graphviz==0.14.1
 pygraphviz==1.5
 snakeviz==2.1.0
-numpy~=1.19.0
-scipy==1.5.1
+numpy~=1.19.1
+scipy==1.5.2
+memory-profiler==0.57.0

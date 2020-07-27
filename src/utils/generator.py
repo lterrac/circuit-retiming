@@ -45,7 +45,6 @@ def generate_from_correlator(nodes: int):
     correlator.add_edges_from([(str(down), str(up), {'wire_delay': str(0)})])
     correlator.add_edges_from([(str(up + 1), str(up), {'wire_delay': str(0)})])
 
-
     path = os.getcwd() + '/../corr-graphs/'
 
     nx.nx_agraph.write_dot(correlator, path + 'corr-{}.dot'.format(str(nodes)))
@@ -94,7 +93,8 @@ def random_generator(n: int, k: int, alpha: int, graph_version: int):
     nx.set_edge_attributes(graph, 1, 'wire_delay')
     # Save it only if it is connected
     if nx.is_weakly_connected(graph):
-        nx.nx_agraph.write_dot(graph, os.getcwd() + '/../rand-graphs/clean/{}/rand-{}-{}.dot'.format(n, n, graph_version))
+        nx.nx_agraph.write_dot(graph,
+                               os.getcwd() + '/../rand-graphs/clean/{}/rand-{}-{}.dot'.format(n, n, graph_version))
         return True
     else:
         return False
@@ -114,8 +114,9 @@ def performance_generator(n: int):
     graph.add_edge(max(graph.nodes), 0)
     nx.set_node_attributes(graph, 3, 'component_delay')
     nx.set_edge_attributes(graph, 1, 'wire_delay')
-    nx.nx_agraph.write_dot(graph, root + 'perf-graphs/clean/perf-{}.dot'.format(str(n)))
+    path = os.getcwd() + '/../perf-graphs/'
+    nx.nx_agraph.write_dot(graph, path + 'clean/perf-{}.dot'.format(str(n)))
 
 
 if __name__ == '__main__':
-    random_generator(n=100, k=100, alpha=4000, graph_version=1)
+    random_generator(n=500, k=100, alpha=4000, graph_version=1)

@@ -1,9 +1,16 @@
-import os
 import cProfile
+import os
 import time
 import networkx as nx
-import src.utils.utilities as utils
+from memory_profiler import profile
 import src.retimer.retimer as rt
+import src.utils.utilities as utils
+
+
+@profile
+def profile_memory(retimer, param):
+    retimer.retime(param)
+
 
 def bench_memory():
     """
@@ -11,7 +18,21 @@ def bench_memory():
     are printed in the terminal. In order to process bigger rand-graphs and save time, matrices W and D are
     directly passed to the retimer that executes opt2, avoiding to be computed twice per graph.
     """
-    pass
+    path = os.getcwd() + '/perf-graphs/randomized'
+    perf_test = [file for file in os.listdir(path)]
+    for file in sorted(perf_test):
+        print(file)
+        graph = utils.load_graph(path + '/' + file)
+        graph = utils.preprocess_graph(graph)
+        max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
+        retimer = rt.Retimer(graph.copy())
+        profile_memory(retimer, 'opt1')
+        assert max_clock == retimer.opt.min_clock
+        nretimer = rt.Retimer(graph.copy())
+        del retimer
+        profile_memory(nretimer, 'opt2')
+        assert max_clock == nretimer.opt.min_clock
+        del nretimer
 
 
 def bench_cpu(test_path: str, randomize=False):
@@ -46,7 +67,7 @@ def bench_cpu(test_path: str, randomize=False):
         del nretimer
 
 
-def profile(test_path: str,randomize=False):
+def profile(test_path: str, randomize=False):
     """
     Profile both opt1 and opt2 using the graph generated for the performance tests.
     cProfiler output files can be visualized with snakeviz

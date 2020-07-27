@@ -9,6 +9,7 @@ Final project for Advanced Algorithms exam at Politecnico di Milano
   - [Introduction](#introduction)
   - [Repository](#repository)
   - [Tools](#tools)
+  - [Code structure](#code-structure)
   - [Testing](#testing)
   - [Test Generation](#test-generation)
   - [Graphs](#graphs)
@@ -19,22 +20,23 @@ Final project for Advanced Algorithms exam at Politecnico di Milano
   - [CPU Profiling and Estimation](#cpu-profiling-and-estimation)
     - [Legend](#legend)
     - [Estimation vs. Real execution time](#estimation-vs-real-execution-time)
+  - [Random Profiling](#random-profiling)
   - [Memory Profiling](#memory-profiling)
   - [Authors](#authors)
 
 ## Introduction
 
-The goal of this project was to implement four algorithms that allows to reduce the clock cycle duration to its minimum duration without modifying the design and the behaviour of the circuit. In fact only registers movement are performed in order to achieve this result. In the reference paper during the project introduction the following algorithm are presented:
+The goal of this project was to implement four algorithms that allows to reduce the clock cycle duration to its minimum duration without modifying the design and the behaviour of the circuit. In fact only registers movements are performed in order to achieve this result. In the reference paper the following algorithms are presented:
 
-- **OPT1**: the first algorithm presented in order to find a legal retiming which minimizes the circuit clock cycle. To solve the problem a binary search is used to try different clock cycles while an all pairs shortest path (Bellman Ford) is used to check wheter a legal retiming for the given clock cycle exists. An important consideration that will become relevant during the performance analysis is that the algorithm used is a Networkx library function implemented in C++ which gives a significant performance boost to this algorithm. In the end the computational complexity of this algorithm is:  
-![equation](http://www.sciweavers.org/tex2img.php?eq=O%28%20%5C%7C%20V%20%5C%7C%20%5E%7B3%7D%20log%28%20%5C%7C%20V%20%5C%7C%20%29%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
-- **OPT2**: the second algorithm which has a better computational complexity since it takes into account the circuit edges rather than only nodes. Like OPT1 it uses a binary search to search for the minimum clock but FEAS algorith is used to check if the retiming produced for the selected clock cycle is feasible. Unlike OPT1 this algorithm is implemented using a lot more of Python code which introduces an overhead which makes it perform worse in the performance tests. However, in the [conclusions](#conclusions) and [performance analysis](#performance) sections it is proved that the implementation complexity is compliant with the theoretical one, The algorithm complexity is:  
-![equation](http://www.sciweavers.org/tex2img.php?eq=O%28%20%5C%7C%20V%20%5C%7C%20%5C%7C%20E%20%5C%7C%20log%28%20%5C%7C%20V%20%5C%7C%20%29%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
-
+- **OPT1**: the first algorithm presented in order to find a legal retiming which minimizes the circuit clock cycle. To solve the problem a binary search is used to try different clock cycles while an all pairs shortest path (Bellman Ford) is used to check wheter a legal retiming for a given clock cycle exists. An important consideration that will become relevant during the performance analysis is that the Bellman Ford algorithm is implemented in the Networkx library and it is written in C++ which gives a significant performance boost to this algorithm. In the end the computational complexity of this algorithm is:  
+O(|V|^3 * log(|V|)
+- **OPT2**: the second algorithm which has a better computational complexity since it takes into account the circuit edges rather than only nodes. Like OPT1 it uses a binary search to search for the minimum clock but FEAS algorith is used to check if the retiming produced for the selected clock cycle is legal. Unlike OPT1, this algorithm is implemented using a lot more of Python code which introduces an overhead which makes it perform worse in the performance tests. However, in the [conclusions](#conclusions) and [performance analysis](#performance) sections it is proved that the implementation complexity is compliant with the theoretical one, The algorithm complexity is:  
+O(|V| * |E| * log(|V|)
 - **FEAS**: It is used by OPT2 to check whether a retiming is feasible or not. It simulates a Bellman Ford algorithm iteration step. The algorithm complexity is:  
-![equation](http://www.sciweavers.org/tex2img.php?eq=O%28%20%5C%7C%20V%20%5C%7C%20%5C%7C%20E%20%5C%7C%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+O(|V| * |E|)
+
 - **CP**: Used to compute to minimum clock cycle of a circuit. The complexity is:  
-![equation](http://www.sciweavers.org/tex2img.php?eq=O%28%20%5C%7C%20E%20%5C%7C%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+O(|E|)
 
 
 ## Repository
@@ -67,7 +69,7 @@ Tree:
 
 Folders content:
 
-- `corr-graphs`: contains the circuit representing a correlator at N bits.
+- `corr-graphs`: contains the circuits representing a correlator at N bits.
 - `docs`: contains the paper covering the algorithms to implement and the powerpoint presentation.
 - `rand-graphs`: contains the random generated graph. There are two graph versions: the already randomized one (with the registers already moved) and the clean one.
 - `perf-graphs`: contains the path graph used for the performance testing.
@@ -90,17 +92,23 @@ Folders content:
 - Graph File extension:
   - `.dot` files
 
-## Testing
-First of all install all the dependencies listed in `/requirements.txt`then you can either import the test functions that can be found under `/test` or just modify the main section at the end of each file.
+## Code structure
 
-Before launching the tests is necessary to change the global variable `root` by substituting the `path_to_the_repo` with the global path where the repository is located. I have no idea why but my virtual environment does not recognize python paths so I have done this workaround.
+The algorithms are contained in the files:
+
+- `src.wd.wd.py`: contains the code of WD algorithm.
+- `src.opt.opt.py` contains both OPT1, OPT2, FEAS and CP algorithms.
+- `src.retimer.retimer.py`: object that wraps WD and OPT algorithms.
+  
+## Testing
+First of all, install all the dependencies listed in `/requirements.txt`then you can either import the test functions that can be found under `/test` or just modify the main section at the end of each test file.
 
 In `test/test.py` there are the following test categories:
-- `Random`: this runs the algorithms on a test suite of 200 graphs random generated graphs.At runtime its edge weights are also changed. See `src.utils.utilities.py` at function  `node_randomizer`.
+- `Random`: this runs the algorithms on a test suite of random generated graphs. At runtime the graphs edge weights are also changed. See the function  `node_randomizer` at `src.utils.utilities.py`.
 - `Correlator`: test the circuit described in the paper with also the option to customize the circuit length (it suffices to pass the desired number of nodes to the test function).
 
 In `/test/performance.py` there are:
-- `CPU Performance`: run the algorithms on graphs and print the execution time (already embedded inside the `opt.py` class).
+- `CPU Performance`: run the algorithms on graphs and print the execution time (this functionality is already embedded inside the `src.opt.opt.py` class).
 - `CPU Profiler`: run the algorithms with cProfiler and print the output in `/profile-results-optimized`. This can be visualized with the `snakeviz` tool.
 - `MEM Profiler`: run the algorithms with memory-profiler and print the output in `/profile-results-optimized`. This can be visualized with the `snakeviz` tool.
 
@@ -109,7 +117,7 @@ All the performance tests runs the graphs inside `/perf-graphs` which containe b
 ## Test Generation
 One of the project requirement was to generate randomly some test cases in order to assess the correctness of the implemented solution. In order to do this the following approch has been adopted:
 
-1) The graph is generated with exactly one register on each arc.
+1) The graph is generated with exactly one register on each edge.
 2) Then, iterating through all the nodes, an amount of registers is selected from incoming/outcoming arcs (this is choosen randomly) and passed to backward/forward paths. In addition, the randomization process is designed to avoid creating arcs with a negative number of registers and doing the register movement on all incoming/outgoing arcs ensures that the circuit behaviour does not change and so the minimum clock cycle is preserved.
 3) Since the graph behaviour does not change the maximum clock is the maximum of the node delays and, by applying the retiming algorithms to the randomized graphs, the original graph or at least one with the same minimum clock cycle is obtained.
 
@@ -119,13 +127,13 @@ The randomizer mechanism is show in figure:
 The maximum number of register that can be moved is the minimum between all the arc edges with the same direction (incoming or outgoing) and then added to all the other edges in the opposite direction.
 
 ## Graphs
-The graphs used in this project to test the implementation correctness belongs to three types:
+The graphs used in this project to test the implementation correctness are divided into three types:
 
-- `Correlator`: graph shown in the paper. It is possible to generate this graph schema with an arbitrary amount of nodes.
+- `Correlator`: the graph shown in the paper. It is possible to generate this graph schema with an arbitrary amount of nodes, please refer to `generate_from_correlator` in `src.utils.generator.py`.
 - `Path`: graphs used to conduct the performance tests. The circuit creates a directed ring and has the same number of nodes and edges.
 - `Custom random K out graph`: used to assess the code correctness. Starting from a `random_k_out_graph` (documentation available in the Networkx documentation), some edges are deleted to make the graph a little bit more sparse while keeping attention to maintain the graph always connected.
 
-Except for the `Correlator`, all the other graphs starts with one register per edge and then are randomized. For more information refer to [test generation section](#test-generation).
+Except for the graph type `Correlator`, all the other graphs starts with exactly one register per edge and are then randomized. For more information refer to [test generation section](#test-generation).
 
 ### Graph schemes
 The following images give an overview of what the graphs descripted above look like.
@@ -143,6 +151,8 @@ The following images give an overview of what the graphs descripted above look l
 
 This section analyzes how the computational complexity has been assessed.
 
+To conduct the performance tests `Path` graphs have been used because they are the ones in which OPT2 should perform better than OPT1.
+
 The performance of the two algorithms significantly differs in their execution time. In fact, OPT1 calls the `all pairs shortest path` function which uses the C++ library `Boost Graph Library`. This gives to OPT1 a significant speed increase with respect to OPT2 despite the latter heavily uses Numpy data structures. Even so, the profile results confirm the fact that the implementation of both algorithms is coherent with respect to the given computational complexity and that OPT2 is penalised only by the amount of Python code used to implement it.
 
 In order to estimate the run duration the algorithm complexities, a time reference, an input size difference and eventually a constant factor are used.
@@ -153,7 +163,8 @@ For example, the estimation of the run with 1000 nodes is computed as follows:
 - constant C: initially suppose that is 1
 
 The estimation is computed as:  
-![equation](http://www.sciweavers.org/tex2img.php?eq=C%20%2A%20T%20%2A%20%28%20%5C%7C%20D%20%5C%7C%20%5E%7B2%7D%20log%28%5C%7CD%5C%7C%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+          
+C  *  T  *  (|D|^2 *  log(|D|))
 
 ```
 Note that since the number of nodes and edges are the same in path graphs the complexity of OPT2 can be reduced with the one above.
@@ -192,7 +203,7 @@ Results:
 ![Estimation vs  Real OPT1](https://user-images.githubusercontent.com/25181201/88468812-56f7be80-cee9-11ea-8b14-42d0b19479ab.png)
 ![Estimation vs  Real OPT2](https://user-images.githubusercontent.com/25181201/88468821-5b23dc00-cee9-11ea-918a-5e508f4e2745.png)
 
-The last run with 1000 nodes has been estimated with this more accurate constants:
+The last runs have been estimated with this more accurate constants:
 - OPT1: 0.2759813635
 - OPT2: 1.133482552
 
@@ -204,8 +215,34 @@ In the plots the X axis represents the input size while the Y axis represents th
 ```
 From these table and plots it is clear that OPT1 always performs better than OPT2 but, observing the `Ratios` columns of OPT2, we can see that the estimation on the execution time is more accurate for OPT2 in longer runs and so it is coherent with the theoretical complexity. In fact, from runs with N greater than 500 nodes the constant factor is really close to 1. This allows to assess that, despite the longer runs of OPT2, the algorithm has the desired complexity and when N will reach a certain value, OPT2 will perform better than OPT1 despite it executes C++ code.
 
+## Random Profiling
+
+For completeness there are also some data regarding the execution time on some random graphs. The data are reported below:
+
+|N  |opt1 optimize|opt1       |opt2 optimize|opt2       |
+|---|-------------|-----------|-------------|-----------|
+|100|0.131        |2.6989231  |2.06         |4.6279231  |
+|200|0.545        |19.7292573 |7.6          |26.7842573 |
+|300|1.28         |62.5056354 |22.7         |83.9256354 |
+|400|3.07         |149.0082754|49.1         |195.0382754|
+|500|4.89         |302.1486374|92.9         |390.1586374|
+
 ## Memory Profiling
-***TBA***
+
+The memory profiling are conducted as follows:
+1) A memory snapshot has been taken after the execution of WD.
+2) A second snapshot has been taken at the end of OPT algorithm.
+
+The memory profiling results are reported below and they show that the memory is linearly increasing during the execution of the algorithms.
+
+|N  |Input difference|Memory before OPT|Mem during OPT1|Increment|Mem during OPT2|Increment|
+|---|----------------|-----------------|---------------|---------|---------------|---------|
+|100|0.5             |74               |84.4           |10.4     |84.1           |0        |
+|200|1               |83.9             |123.4          |39.5     |122.4          |38.5     |
+|300|1.5             |122.2            |220.3          |98.1     |217.9          |95.7     |
+|400|2               |217.7            |391.5          |173.8    |390.1          |172.4    |
+|500|2.5             |388.8            |687.9          |299.1    |681.3          |292.5    |
+
 ## Authors
 
 * **Luca Terracciano**

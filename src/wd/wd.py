@@ -1,3 +1,5 @@
+from functools import reduce
+
 import networkx as nx
 import numpy as np
 
@@ -63,7 +65,8 @@ class WD:
         :return:
         """
 
-        return attributes[self.weight][0] * self._max_component_delay + (self._max_component_delay - attributes[self.weight][1])
+        return attributes[self.weight][0] * self._max_component_delay + (
+                self._max_component_delay - attributes[self.weight][1])
 
     def _all_pairs_shortest_path(self):
         """
@@ -95,9 +98,10 @@ class WD:
         :param path: path from the source to the target node
         :return: the sum all the wire delays along a path
         """
-        grapg = self._weighted_graph
-        return sum([grapg[v1][v2][self.weight][0] for v1, v2 in zip(path, path[1:])
-                    if v2 in grapg[v1]])
+        graph = self._weighted_graph
+        weight = self.weight
+        return sum([graph[v1][v2][weight][0] for v1, v2 in zip(path, path[1:])
+                    if v2 in graph[v1]])
 
     def _compute_d(self, path: list):
         """
@@ -105,6 +109,9 @@ class WD:
         :return: the sum all the gate delays along a path plus the target one's
         """
         target = path[-1]
-        return self._weighted_graph.nodes[target][self.component_delay] - sum(
-            [self._weighted_graph[v1][v2][self.weight][1] for v1, v2 in zip(path, path[1:])
-             if v2 in self._weighted_graph[v1]])
+        graph = self._weighted_graph
+        weight = self.weight
+        component_delay = self.component_delay
+        return graph.nodes[target][component_delay] - sum(
+            [graph[v1][v2][weight][1] for v1, v2 in zip(path, path[1:])
+             if v2 in graph[v1]])
