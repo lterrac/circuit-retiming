@@ -11,13 +11,13 @@ Final project for Advanced Algorithms exam at Politecnico di Milano
   - [Tools](#tools)
   - [Code structure](#code-structure)
   - [WD weighting strategy](#wd-weighting-strategy)
-  - [Testing](#testing)
-  - [Test Generation](#test-generation)
   - [Graphs](#graphs)
     - [Graph schemes](#graph-schemes)
       - [Correlator Graph Schema](#correlator-graph-schema)
       - [Path Graph Schema](#path-graph-schema)
       - [Custom Random K Out Graph](#custom-random-k-out-graph)
+  - [Testing](#testing)
+  - [Test Generation](#test-generation)
   - [CPU Profiling and Estimation](#cpu-profiling-and-estimation)
     - [Legend](#legend)
     - [Estimation vs. Real execution time](#estimation-vs-real-execution-time)
@@ -111,6 +111,28 @@ In fact, the algorithm requires to solve an all pairs shortest path algorithm us
 An example is provided below:  
 ![Untitled Diagram](https://user-images.githubusercontent.com/25181201/88568487-5a01c480-d039-11ea-9826-23558874b5b6.png)
 
+## Graphs
+The graphs used in this project to test the implementation correctness are divided into three types:
+
+- `Correlator`: the graph shown in the paper. It is possible to generate this graph schema with an arbitrary amount of nodes, please refer to `generate_from_correlator` in `src.utils.generator.py`.
+- `Path`: graphs used to conduct the performance tests. The circuit creates a directed ring and has the same number of nodes and edges.
+- `Custom random K out graph`: used to assess the code correctness. Starting from a `random_k_out_graph` (documentation available in the Networkx documentation), some edges are deleted to make the graph a little bit more sparse while keeping attention to maintain the graph always connected.
+
+Except for the graph type `Correlator`, all the other graphs starts with exactly one register per edge and are then randomized. For more information refer to [test generation section](#test-generation).
+
+### Graph schemes
+The following images give an overview of what the graphs descripted above look like.
+
+#### Correlator Graph Schema
+<img src="https://user-images.githubusercontent.com/25181201/88468344-40019e00-cee2-11ea-88c1-033d5eb540cb.png" width="200"/>  
+
+#### Path Graph Schema
+<img src="https://user-images.githubusercontent.com/25181201/88468343-3d9f4400-cee2-11ea-9d05-73441baf6ed7.png" width="200" height="400"/>  
+
+#### Custom Random K Out Graph
+<img src="https://user-images.githubusercontent.com/25181201/88444669-842b6a80-ce1e-11ea-9f72-8fc0b8893305.png" width="600"/>
+
+
 ## Testing
 First of all, install all the dependencies listed in `/requirements.txt`then you can either import the test functions that can be found under `/test` or just modify the main section at the end of each test file.
 
@@ -136,27 +158,6 @@ The randomizer mechanism is show in figure:
 ![Randomizer](https://user-images.githubusercontent.com/25181201/88468279-712d9e80-cee1-11ea-9142-dd83a4d407e3.png)
 
 The maximum number of register that can be moved is the minimum between all the arc edges with the same direction (incoming or outgoing) and then added to all the other edges in the opposite direction.
-
-## Graphs
-The graphs used in this project to test the implementation correctness are divided into three types:
-
-- `Correlator`: the graph shown in the paper. It is possible to generate this graph schema with an arbitrary amount of nodes, please refer to `generate_from_correlator` in `src.utils.generator.py`.
-- `Path`: graphs used to conduct the performance tests. The circuit creates a directed ring and has the same number of nodes and edges.
-- `Custom random K out graph`: used to assess the code correctness. Starting from a `random_k_out_graph` (documentation available in the Networkx documentation), some edges are deleted to make the graph a little bit more sparse while keeping attention to maintain the graph always connected.
-
-Except for the graph type `Correlator`, all the other graphs starts with exactly one register per edge and are then randomized. For more information refer to [test generation section](#test-generation).
-
-### Graph schemes
-The following images give an overview of what the graphs descripted above look like.
-
-#### Correlator Graph Schema
-<img src="https://user-images.githubusercontent.com/25181201/88468344-40019e00-cee2-11ea-88c1-033d5eb540cb.png" width="200"/>  
-
-#### Path Graph Schema
-<img src="https://user-images.githubusercontent.com/25181201/88468343-3d9f4400-cee2-11ea-9d05-73441baf6ed7.png" width="200" height="400"/>  
-
-#### Custom Random K Out Graph
-<img src="https://user-images.githubusercontent.com/25181201/88444669-842b6a80-ce1e-11ea-9f72-8fc0b8893305.png" width="600"/>
 
 ## CPU Profiling and Estimation
 
