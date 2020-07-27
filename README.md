@@ -31,13 +31,15 @@ The goal of this project was to implement four algorithms that allows to reduce 
 
 - **OPT1**: the first algorithm presented in order to find a legal retiming which minimizes the circuit clock cycle. To solve the problem a binary search is used to try different clock cycles while an all pairs shortest path (Bellman Ford) is used to check wheter a legal retiming for a given clock cycle exists. An important consideration that will become relevant during the performance analysis is that the Bellman Ford algorithm is implemented in the Networkx library and it is written in C++ which gives a significant performance boost to this algorithm. In the end the computational complexity of this algorithm is:  
 O(|V|^3 * log(|V|)
-- **OPT2**: the second algorithm which has a better computational complexity since it takes into account the circuit edges rather than only nodes. Like OPT1 it uses a binary search to search for the minimum clock but FEAS algorith is used to check if the retiming produced for the selected clock cycle is legal. Unlike OPT1, this algorithm is implemented using a lot more of Python code which introduces an overhead which makes it perform worse in the performance tests. However, in the [conclusions](#conclusions) and [performance analysis](#performance) sections it is proved that the implementation complexity is compliant with the theoretical one, The algorithm complexity is:  
+- **OPT2**: the second algorithm which has a better computational complexity since it takes into account the circuit edges rather than only nodes. Like OPT1 it uses a binary search to search for the minimum clock but FEAS algorith is used to check if the retiming produced for the selected clock cycle is legal. Unlike OPT1, this algorithm is implemented using a lot more of Python code which introduces an overhead which makes it perform worse in the performance tests. However, in the [CPU Profiling and Estimation](#cpu-profiling-and-estimation) section it is proved that the implementation complexity is compliant with the theoretical one, The algorithm complexity is:  
 O(|V| * |E| * log(|V|)
 - **FEAS**: It is used by OPT2 to check whether a retiming is feasible or not. It simulates a Bellman Ford algorithm iteration step. The algorithm complexity is:  
 O(|V| * |E|)
 
 - **CP**: Used to compute to minimum clock cycle of a circuit. The complexity is:  
 O(|E|)
+
+There is also a PowerPoint presetation available [here](https://docs.google.com/presentation/d/128jxr-vGF-paeDne6-SGUv6apcrBtCfEgoGT18RT6F8/edit?usp=sharing)
 
 
 ## Repository
