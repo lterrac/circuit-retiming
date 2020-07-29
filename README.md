@@ -241,6 +241,8 @@ For completeness there are also some data regarding the execution time on some r
 |400|3.07         |149.0082754|49.1         |195.0382754|
 |500|4.89         |302.1486374|92.9         |390.1586374|
 
+As expected with an higher number of edges OPT1 performs better than OPT2. But, with the last run with 500 nodes we can see the run duration of OPT2 starts to increase with respect to the run with the Path graph and hopefully it will continue to follow this trend detaching itself from the curve represented in the above graphs.
+
 ## Memory Profiling
 
 The memory profiling are conducted as follows:
