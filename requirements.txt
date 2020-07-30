@@ -6,3 +6,5 @@ snakeviz==2.1.0
 numpy~=1.19.1
 scipy==1.5.2
 memory-profiler==0.57.0
+xdot==1.1
+vext.gi==0.7.0

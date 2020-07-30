@@ -7,6 +7,7 @@ Final project for Advanced Algorithms exam at Politecnico di Milano
 - [Synchrounous Circuit Retiming](#synchrounous-circuit-retiming)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
+  - [Scripts](#scripts)
   - [Repository](#repository)
   - [Tools](#tools)
   - [Code structure](#code-structure)
@@ -41,7 +42,13 @@ O(|E|)
 
 There is also a PowerPoint presetation available [here](https://docs.google.com/presentation/d/128jxr-vGF-paeDne6-SGUv6apcrBtCfEgoGT18RT6F8/edit?usp=sharing)
 
-
+## Scripts
+There are two main scripts available to the user:
+1. `run.py`: run the specified algorithms on the graph specified and writes the final graph in a new file with the possibility to also print W and D matrices
+2. `draw.py`: draws the specified graph using Networkx library with the possibility to draw the `component_delay` attribute as well as the nodes name.
+   
+All the configurations can be seen by using the flag `--help` which shows all the list of possibile flags.
+   
 ## Repository
 
 Tree:

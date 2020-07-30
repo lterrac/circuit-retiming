@@ -9,7 +9,7 @@ class WD:
     Class responsible of executing the WD algorithm on a graph
     """
 
-    def __init__(self, graph: nx.DiGraph):
+    def __init__(self, graph: nx.DiGraph, print_wd=False):
         self._graph = graph
         self._weighted_graph = nx.DiGraph()
         self._matrix_dimension = len(graph)
@@ -18,6 +18,7 @@ class WD:
         self.component_delay = 'component_delay'
         self.wire_delay = 'wire_delay'
         self.weight = 'weight'
+        self.print_wd = print_wd
 
     def wd(self):
         """
@@ -27,6 +28,9 @@ class WD:
         self._weight_edges()
         self._all_pairs_shortest_path()
         self._compute_wd()
+
+        if self.print_wd is True:
+            self.print_matrices()
 
     def _weight_edges(self):
         """
@@ -114,3 +118,13 @@ class WD:
         return graph.nodes[target][component_delay] - sum(
             [graph[v1][v2][weight][1] for v1, v2 in zip(path, path[1:])
              if v2 in graph[v1]])
+
+    def print_matrices(self):
+        """
+        Print W and D matrices if the corresponding flag is passed to the object constructor
+        :return:
+        """
+        print("W matrix")
+        print(self.w)
+        print("D matrix")
+        print(self.d)
