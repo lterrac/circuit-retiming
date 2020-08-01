@@ -23,7 +23,6 @@ def bench_memory():
     for file in sorted(perf_test):
         print(file)
         graph = utils.load_graph(path + '/' + file)
-        graph = utils.preprocess_graph(graph)
         max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
         retimer = rt.Retimer(graph.copy())
         profile_memory(retimer, 'opt1')
@@ -46,14 +45,14 @@ def bench_cpu(test_path: str, randomize=False):
     for file in sorted(perf_test):
         print(file)
         graph = utils.load_graph(path + '/' + file)
-        graph = utils.preprocess_graph(graph)
+        retimer = rt.Retimer(graph.copy())
 
         if randomize is True:
-            graph = utils.node_randomizer(graph)
+            graph = utils.node_randomizer(retimer.graph)
             nx.nx_agraph.write_dot(graph, path + '/np-{}'.format(file))
 
         max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
-        retimer = rt.Retimer(graph.copy())
+
         init = time.time()
         retimer.retime('opt1')
         end = time.time()
@@ -79,14 +78,13 @@ def profile(test_path: str, randomize=False):
     for file in sorted(perf_test):
         print(file)
         graph = utils.load_graph(path + '/' + file)
-        graph = utils.preprocess_graph(graph)
+        retimer = rt.Retimer(graph.copy())
 
         if randomize is True:
-            graph = utils.node_randomizer(graph)
+            graph = utils.node_randomizer(retimer.graph)
             nx.nx_agraph.write_dot(graph, path + 'np-{}'.format(file))
 
         max_clock = max([weight['component_delay'] for (node, weight) in graph.nodes.data()])
-        retimer = rt.Retimer(graph.copy())
         pr = cProfile.Profile()
         pr.enable()
         retimer.retime('opt1')

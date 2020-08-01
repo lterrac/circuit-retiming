@@ -18,10 +18,9 @@ def random_test(test_path: str):
     perf_test = [file for file in os.listdir(path)]
     for file in sorted(perf_test):
         graph = utils.load_graph(path + '/' + file)
-        graph = utils.preprocess_graph(graph)
+        retimer = rt.Retimer(graph)
         print("file")
         print(file)
-        retimer = rt.Retimer(graph)
         max_clock = max([weight['component_delay'] for (node, weight) in retimer.graph.nodes.data()])
         print("theoretical clock")
         print(max_clock)
@@ -46,7 +45,6 @@ def correlator_test(correlator_dimension=None):
     if correlator_dimension is None:
         path = path + 'correlator.dot'
         graph = utils.load_graph(path)
-        graph = utils.preprocess_graph(graph)
     else:
         graph = gn.generate_from_correlator(correlator_dimension)
 
@@ -55,7 +53,6 @@ def correlator_test(correlator_dimension=None):
     else:
         max_clock = 14
 
-    graph = utils.preprocess_graph(graph)
     retimer = rt.Retimer(graph)
     print("theoretical clock")
     print(max_clock)

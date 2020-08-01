@@ -7,22 +7,6 @@ def load_graph(path: str) -> nx.DiGraph:
     return nx.nx_agraph.read_dot(path)
 
 
-def preprocess_graph(graph: nx.DiGraph) -> nx.DiGraph:
-    """
-    Convert delays from strings to int
-    :param graph:
-    :return:
-    """
-    component_delay = nx.get_node_attributes(G=graph, name='component_delay')
-    node_attributes = {node: int(d) for (node, d) in component_delay.items()}
-    nx.set_node_attributes(G=graph, values=node_attributes, name='component_delay')
-
-    wire_delay = nx.get_edge_attributes(G=graph, name='wire_delay')
-    weights = {(v1, v2): int(wire_delay) for ((v1, v2), wire_delay) in wire_delay.items()}
-    nx.set_edge_attributes(G=graph, values=weights, name='wire_delay')
-    return graph
-
-
 def node_randomizer(graph: nx.DiGraph) -> nx.DiGraph:
     """
     Randomize a graph moving forward or backward the registers among the arcs. This is done in a

@@ -7,9 +7,9 @@ import argparse
 
 def run(path: str, printwd: bool, optimizer: str, output: str):
     graph = utilities.load_graph(path)
-    retimer = rt.Retimer(utilities.preprocess_graph(graph), printwd)
+    retimer = rt.Retimer(graph, printwd)
     retimer.retime(optimizer)
-    nx.nx_agraph.write_dot(retimer.retimed_graph, output)
+    rt.save_graph(retimer.retimed_graph, output)
 
 
 if __name__ == '__main__':
