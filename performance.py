@@ -40,7 +40,7 @@ def bench_cpu(test_path: str, randomize=False):
     are printed in the terminal. In order to process bigger rand-graphs and save time, matrices W and D are
     directly passed to the retimer that executes opt2, avoiding to be computed twice per graph.
     """
-    path = os.getcwd() + '/../' + test_path
+    path = os.getcwd() + '/' + test_path
     perf_test = [file for file in os.listdir(path)]
     for file in sorted(perf_test):
         print(file)
@@ -73,7 +73,7 @@ def profile(test_path: str, randomize=False):
     cProfiler output files can be visualized with snakeviz
     """
 
-    path = os.getcwd() + '/../' + test_path
+    path = os.getcwd() + '/' + test_path
     perf_test = [file for file in os.listdir(path)]
     for file in sorted(perf_test):
         print(file)
@@ -90,7 +90,7 @@ def profile(test_path: str, randomize=False):
         retimer.retime('opt1')
         pr.disable()
         assert max_clock == retimer.opt.min_clock
-        pr.dump_stats(os.getcwd() + '/../profile-results-optimized/{}-opt1.out'.format(file))
+        pr.dump_stats(os.getcwd() + '/profile-results-optimized/{}-opt1.out'.format(file))
         del retimer
 
         nretimer = rt.Retimer(graph.copy())
@@ -99,7 +99,7 @@ def profile(test_path: str, randomize=False):
         nretimer.retime('opt2')
         assert max_clock == nretimer.opt.min_clock
         pr.disable()
-        pr.dump_stats(os.getcwd() + '/../profile-results-optimized/{}-opt2.out'.format(file))
+        pr.dump_stats(os.getcwd() + '/profile-results-optimized/{}-opt2.out'.format(file))
         del nretimer
 
 

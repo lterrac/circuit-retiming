@@ -14,7 +14,7 @@ def random_test(test_path: str):
     After the edges has been randomly moved the script runs both opt1 and opt2 and checks that the clock
     found by both algorithms is the same as the initial one.
     """
-    path = os.getcwd() + '/../' + test_path
+    path = os.getcwd() + '/' + test_path
     perf_test = [file for file in os.listdir(path)]
     for file in sorted(perf_test):
         graph = utils.load_graph(path + '/' + file)
@@ -40,7 +40,7 @@ def correlator_test(correlator_dimension=None):
     is passed the exact one is chosen, otherwise a correlator with the desired dimension
     will be created.
     """
-    path = os.getcwd() + '/../corr-graphs'
+    path = os.getcwd() + '/corr-graphs'
     perf_test = [file for file in os.listdir(path)]
     if correlator_dimension is None:
         path = path + 'correlator.dot'

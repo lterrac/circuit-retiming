@@ -72,9 +72,8 @@ Tree:
 │   ├── retimer
 │   ├── utils
 │   └── wd
-└── test
-    ├── performance.py
-    └── test.py
+├── performance.py
+└── test.py
 ```
 
 Folders content:
@@ -86,7 +85,6 @@ Folders content:
 - `profile-results-old`: [OUTDATED] contains the profilings of the `beautified` implementation.
 - `profile-results-optimized`: the actual profiling files. 
 - `src`: the source code of the algorithms and utilities.
-- `test`: scripts used for random, correlator, performance testing and profiling.
 
 
 ## Tools
